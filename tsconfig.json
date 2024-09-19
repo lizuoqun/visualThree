@@ -1,0 +1,89 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src/",
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowJs": true,
+    "paths": {
+      "@/*": [
+        "*"
+      ],
+      "@/components/*": [
+        "components/*"
+      ],
+      "/assets/*": [
+        "src/assets/*"
+      ],
+      "/components/*": [
+        "src/components/*"
+      ],
+      "/pinia/*": [
+        "src/pinia/*"
+      ],
+      "/router/*": [
+        "src/router/*"
+      ],
+      "/vite/*": [
+        "src/vite/*"
+      ],
+      "//*": [
+        "src/*"
+      ],
+      "~assets/*": [
+        "src/assets/*"
+      ],
+      "~components/*": [
+        "src/components/*"
+      ],
+      "~pinia/*": [
+        "src/pinia/*"
+      ],
+      "~router/*": [
+        "src/router/*"
+      ],
+      "~vite/*": [
+        "src/vite/*"
+      ],
+      "~/*": [
+        "src/*"
+      ]
+    },
+    "types": [
+      "element-plus/global",
+      "xlsx",
+      "file-saver"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "vite.config.*",
+    "*.d.ts",
+    "vue.config.js",
+    "vite.config-component.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "vueCompilerOptions": {
+    "target": 3
+  }
+}
