@@ -1,17 +1,23 @@
 {
   "name": "visualThree",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "dev": "vite",
     "build": "vite build"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
+    "d3": "^7.9.0",
+    "element-plus": "^2.8.3",
+    "three": "^0.168.0",
     "typescript": "^5.6.2",
+    "unplugin-auto-import": "^0.18.3",
     "vue": "^3.5.6",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/three": "^0.168.0",
     "@vue/compiler-sfc": "^3.5.6",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",

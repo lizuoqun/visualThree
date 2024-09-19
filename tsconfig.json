@@ -63,16 +63,16 @@
     },
     "types": [
       "element-plus/global",
-      "xlsx",
-      "file-saver"
+      "node",
+      "@types/d3",
+      "@types/three",
+      "three"
     ]
   },
   "include": [
     "src/**/*",
     "vite.config.*",
-    "*.d.ts",
-    "vue.config.js",
-    "vite.config-component.js"
+    "*.d.ts"
   ],
   "exclude": [
     "node_modules",
