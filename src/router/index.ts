@@ -2,9 +2,7 @@ import {createMemoryHistory, createRouter} from 'vue-router';
 
 const routes = [
   {
-    path: '/', component: () => {
-      () => import('@/pages/vue3/father.vue')
-    }
+    path: '/', name: 'Index', component: () => import('@/pages/index.vue')
   }
 ];
 
