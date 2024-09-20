@@ -9,3 +9,12 @@
 ## 项目托管
 
 该项目已打包托管在Github上，[前往预览](https://lizuoqun.github.io/visualThree/#/)
+
+> 注：因为glb、gltf模型都挺大的，并且这里也是托管到Github Pages，所以耗时会长一点
+
+
+## 更改推送email
+
+```shell
+git config user.email "your_email@example.com"
+```
