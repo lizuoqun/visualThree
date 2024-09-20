@@ -1,8 +1,10 @@
 # visualThree
 
+一个基于three可视化项目，用来实现一些小的demo，下面都是一些无关紧要的碎碎念
+
 ## 项目初始化
 
-- (tailwindcss安装)[https://www.tailwindcss.cn/docs/guides/vite#vue]
+- [vue3安装tailwindcss](https://www.tailwindcss.cn/docs/guides/vite#vue)
 - 安装three、d3需要安装对应types，在tsconfig.json当中配置
 - 项目加入了自动导入，vue里面没有默认的import
 
