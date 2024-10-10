@@ -10,10 +10,10 @@
 
 ## 项目托管
 
-该项目已打包托管在Github上，[前往预览](https://lizuoqun.github.io/visualThree/#/)
+- Github托管：[前往预览](https://lizuoqun.github.io/visualThree/#/)
+- Hbilder托管：[前往预览](https://static-mp-a409bf49-ce3e-4d28-ac9e-a99b788a4f18.next.bspapp.com/visualThree#/)
 
 > 注：因为glb、gltf模型都挺大的，并且这里也是托管到Github Pages，所以耗时会长一点
-
 
 ## 更改推送email
 
