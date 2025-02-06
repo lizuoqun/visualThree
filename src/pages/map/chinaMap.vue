@@ -9,7 +9,8 @@ import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRend
 import * as d3 from 'd3';
 import ChinaData from '@/assets/mapJson/china.json';
 import CityImage from '@/assets/image/city.png';
-import mapTextureImage from '@/assets/image/map-texture.png';
+// import mapTextureImage from '@/assets/image/map-texture.png';
+import mapTextureImage from '@/assets/image/wall.png';
 
 // 创建场景
 const scene = new THREE.Scene();
@@ -150,19 +151,18 @@ const createMap = (data: any) => {
   });
 };
 
-/**
- * 绘制每个市的区域
- * @param data 坐标数据
- * @param color 颜色
- * @param depth 深度
- * */
 const mapTexture = new THREE.TextureLoader().load(mapTextureImage);
 mapTexture.wrapS = THREE.RepeatWrapping;
 mapTexture.wrapT = THREE.RepeatWrapping;
 mapTexture.repeat.set(1, 1);
 mapTexture.needsUpdate = true;
 
-
+/**
+ * 绘制每个市的区域
+ * @param data 坐标数据
+ * @param color 颜色
+ * @param depth 深度
+ * */
 const createMesh = (data: any, color: string, depth: number) => {
 
   const shape = new THREE.Shape();
