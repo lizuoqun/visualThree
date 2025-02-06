@@ -96,7 +96,7 @@ ImageLoader.load(TextureImage, function (img: any) {
 });
 
 const colorMaterial = (color: string, texture: any) => {
-  let options = {};
+  let options: {};
   if (texture) {
     options = {
       map: texture,
