@@ -5,7 +5,7 @@ import type {Group, Texture, TextureLoader} from 'three';
  *
  * */
 import * as THREE from 'three';
-import {LIGHT_INTENSITY, THREE_WHITE_COLOR} from './constent';
+import {GROUND_MAX, LIGHT_INTENSITY, LIGHT_POSITION, THREE_BLACK_COLOR, THREE_WHITE_COLOR} from './constent';
 import gsap from 'gsap';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
@@ -38,17 +38,18 @@ const render = () => {
 onMounted(() => {
   document.getElementById('home')?.appendChild(renderer.domElement);
   addLight();
-  addRectangle();
+  addRectangleTop();
+  addRectangleBottom();
   addModel();
   render();
 });
 
 const addLight = () => {
   // 创建上方矩形的四个顶点的光照位置进行照射
-  createLight(6, 6, 0);
-  createLight(-6, 6, 0);
-  createLight(0, 6, 6);
-  createLight(0, 6, -6);
+  createLight(LIGHT_POSITION, LIGHT_POSITION, 0);
+  createLight(-LIGHT_POSITION, LIGHT_POSITION, 0);
+  createLight(0, LIGHT_POSITION, LIGHT_POSITION);
+  createLight(0, LIGHT_POSITION, -LIGHT_POSITION);
 };
 
 const createLight = (x: number, y: number, z: number) => {
@@ -63,24 +64,23 @@ const addModel = () => {
   const gltfLoader = new GLTFLoader();
   gltfLoader.load('./src/assets/glb/SU7.glb', (gltf: any) => {
     model = gltf.scene;
-    model.traverse((child) => {
-      if (child.name.includes('Wheel')) {
-        // 让四个车轮旋转起来，不对，旋转的中心轴不是车轮的轴
-        // gsap.to(child.rotation, {
-        //   z: Math.PI * 2,
-        //   duration: 2,
-        //   ease: 'power2.inOut'
-        // });
-      }
-    });
-
     const textureLoader: TextureLoader = new THREE.TextureLoader();
     textureLoader.load(
-        './src/assets/image/su7/Wheel1.png',
+        './src/assets/image/su7/Wheel3.png',
         (texture) => {
-          applyTextureToWheels(model, texture, 'Wheel');
+          applyMapTexture(model, texture, 'Wheel');
         }
     );
+
+    const colorTexture = new THREE.MeshPhongMaterial({
+      color: 'red',
+      shininess: 100,
+      flatShading: true
+    });
+    /**
+     * Mesh144 143 142 141 车门
+     * */
+    // applyColorTexture(model, colorTexture, 'Mesh13');
     scene.add(model);
   });
 };
@@ -91,7 +91,7 @@ const addModel = () => {
  * @param texture 贴图
  * @param meshName 贴图对应的物体名称
  * */
-function applyTextureToWheels(model: Group, texture: Texture, meshName: string) {
+function applyMapTexture(model: Group, texture: Texture, meshName: string) {
   model.traverse((child: any) => {
     if (child.isMesh && child.name && child.name.includes(meshName)) {
       child.material.map = texture;
@@ -101,6 +101,14 @@ function applyTextureToWheels(model: Group, texture: Texture, meshName: string) 
     }
   });
 }
+
+const applyColorTexture = (model: Group, colorTexture: THREE.MeshPhongMaterial, meshName: string) => {
+  model.traverse((child: any) => {
+    if (child.isMesh && child.name && child.name.includes(meshName)) {
+      child.material = colorTexture;
+    }
+  });
+};
 
 const viewFromInside = () => {
   // 设置相机位置到汽车内部
@@ -145,17 +153,25 @@ const reFreshScene = () => {
     x: 5,
     y: 1.5,
     z: 0,
-    duration: 1,
+    duration: 2,
     ease: 'power2.inOut',
     onUpdate: () => {
       // 在动画过程中更新相机的视角
       camera.lookAt(controls.target);
     }
   });
+
+  gsap.to(model.position, {
+    x: 0,
+    y: 0,
+    z: 0,
+    duration: 2,
+    ease: 'power2.inOut'
+  });
 };
 
-// 创建顶部的发光矩形
-const addRectangle = () => {
+// 创建顶部的发光矩形 & 底部反光矩形
+const addRectangleTop = () => {
   const geometry = new THREE.PlaneGeometry(3, 5);
   const material = new THREE.MeshStandardMaterial({
     color: THREE_WHITE_COLOR,
@@ -163,22 +179,69 @@ const addRectangle = () => {
     emissiveIntensity: 1
   });
   const rectangle = new THREE.Mesh(geometry, material);
-  rectangle.position.x = 0;
-  rectangle.position.y = 3;
-  rectangle.position.z = 0;
+  rectangle.position.set(0, 3, 0);
   rectangle.rotation.x = Math.PI / 2;
   scene.add(rectangle);
 };
 
+const addRectangleBottom = () => {
+  const geometry = new THREE.PlaneGeometry(GROUND_MAX, GROUND_MAX);
+  const material = new THREE.MeshStandardMaterial({
+    color: THREE_BLACK_COLOR,
+    emissive: THREE_BLACK_COLOR,
+    emissiveIntensity: 0, // 不发光
+    metalness: 0.8, // 金属度
+    roughness: 0.5 // 粗糙度
+  });
+  const rectangle = new THREE.Mesh(geometry, material);
+  rectangle.position.set(0, -0.1, 0);
+  rectangle.rotation.x = Math.PI / 2;
+  rectangle.rotation.y = Math.PI;
+  scene.add(rectangle);
+};
 
+
+const modelMove = () => {
+  // 让模型移动，同时让相机保持同步移动
+  gsap.to(model.position, {
+    z: -10,
+    duration: 5,
+    ease: 'power2.inOut'
+  });
+
+  gsap.to(camera.position, {
+    z: -10,
+    duration: 5,
+    ease: 'power2.inOut'
+  });
+
+  model.traverse((child) => {
+    if (child.name.includes('Wheel')) {
+      // 让四个车轮旋转起来，不对，旋转的中心轴不是车轮的轴
+
+    }
+  });
+};
 </script>
 
 <template>
   <div id="home" class="w-full h-full"/>
 
-  <div class="absolute  top-[10px] left-[10px]">
-    <el-icon class="w-[24px] h-[24px] bg-white cursor-pointer rounded-[4px]">
+  <div class="absolute  top-[10px] left-[10px] flex flex-col">
+    <el-icon class="myIcon">
       <Refresh @click="reFreshScene()"/>
+    </el-icon>
+    <el-icon class="myIcon mt-[4px]">
+      <DArrowRight @click="modelMove()"/>
     </el-icon>
   </div>
 </template>
+<style scoped>
+.myIcon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  background: #ffffff;
+  border-radius: 4px;
+}
+</style>
