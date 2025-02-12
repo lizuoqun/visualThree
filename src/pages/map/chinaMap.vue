@@ -12,6 +12,9 @@ import CityImage from '@/assets/image/city.png';
 import mapTextureImage from '@/assets/image/map-texture.png';
 // import mapTextureImage from '@/assets/image/wall.png';
 
+const HU_NAN = '湖南省';
+const GUANG_XI = '广西壮族自治区';
+
 // 创建场景
 const scene = new THREE.Scene();
 
@@ -126,10 +129,11 @@ const createMap = (data: any) => {
         // 添加自定义属性，点击的时候可以打印出来
         unit.name = name + ' --- ' + adcode;
         // 绘制每个市的区域（传入颜色和深度）
-        const mesh = createMesh(coordinate, '#63bbd0', depth);
+        const mesh = createMesh(coordinate, '#63bbd0', depth, name);
         // 绘制每个市的边界
         const line = createLine(coordinate, depth);
-        unit.add(mesh, ...line);
+        // @ts-ignore
+        unit.add(...mesh, ...line);
       }
     });
     map.add(unit, label);
@@ -171,8 +175,9 @@ mapTexture.needsUpdate = true;
  * @param data 坐标数据
  * @param color 颜色
  * @param depth 深度
+ * @param name 区域名称
  * */
-const createMesh = (data: any, color: string, depth: number) => {
+const createMesh = (data: any, color: string, depth: number, name: string) => {
 
   const shape = new THREE.Shape();
   data.forEach((item: any, idx: number) => {
@@ -207,7 +212,50 @@ const createMesh = (data: any, color: string, depth: number) => {
   const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
   const material = new THREE.MeshStandardMaterial(materialSettings);
   const mesh = new THREE.Mesh(geometry, material);
-  return mesh;
+
+  let shaderMesh: THREE.Mesh | null = null;
+  if ([HU_NAN, GUANG_XI].includes(name)) {
+    const material = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+      transparent: true,
+      depthTest: false,
+      uniforms: {
+        color1: {value: new THREE.Color('#00FFFF')}
+      },
+      vertexShader: `
+          varying vec2 vUv;
+          varying vec3 vNormal;
+
+          void main() {
+            vUv=uv;
+            vNormal=normal;
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+          }`,
+      fragmentShader: `uniform vec3 color1;
+                      varying vec2 vUv;
+                      varying vec3 vNormal;
+                void main() {
+                  if(vNormal.z==1.0||vNormal.z==-1.0||vUv.y ==0.0){
+                    discard;
+                  } else{
+                    gl_FragColor =vec4(color1,mix(1.0,0.0, vUv.y)) ;
+                  }
+                }`
+    });
+
+    const extrudeSettings = {
+      depth: 1,
+      bevelEnabled: false
+    };
+
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+    shaderMesh = new THREE.Mesh(geometry, material);
+    shaderMesh.position.z = 1;
+  }
+
+  return [mesh, shaderMesh];
 };
 
 let baseMaterial: THREE.ShaderMaterial | null = null;
@@ -265,6 +313,7 @@ void main() {
 }`
   });
 
+  // 把这个经纬度数据加上边界运动效果
   if (data[0][0] === 110.379257) {
     baseMaterial = upLineMaterial;
   }
@@ -339,6 +388,7 @@ const setCenter = (map: THREE.Object3D) => {
   map.position.z = map.position.z - center.z;
 };
 
+// 改变着色器的时间来控制省边界移动
 let time = 1;
 const animateAction = (material: any) => {
   if (material) {
@@ -349,7 +399,6 @@ const animateAction = (material: any) => {
     material.uniforms.time.value = time;
   }
 };
-
 
 </script>
 
