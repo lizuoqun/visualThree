@@ -9,8 +9,8 @@ import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRend
 import * as d3 from 'd3';
 import ChinaData from '@/assets/mapJson/china.json';
 import CityImage from '@/assets/image/city.png';
-// import mapTextureImage from '@/assets/image/map-texture.png';
-import mapTextureImage from '@/assets/image/wall.png';
+import mapTextureImage from '@/assets/image/map-texture.png';
+// import mapTextureImage from '@/assets/image/wall.png';
 
 // 创建场景
 const scene = new THREE.Scene();
@@ -73,19 +73,28 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.update();
 
 const animate = () => {
-  requestAnimationFrame(animate);
+  baseMaterialArray.forEach((item) => {
+    animateAction(item);
+  });
+  animateAction(baseMaterial);
   controls.update();
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
+  requestAnimationFrame(animate);
 };
 
 onMounted(() => {
   addRenderer();
-  document.getElementById('map')?.appendChild(renderer.domElement);
   animate();
+  document.getElementById('map')?.appendChild(renderer.domElement);
   mapTextureLight();
   createMap(ChinaData);
   createFlyLine();
+
+  setTimeout(() => {
+    // 因为这里是全国地图，是遍历得到的，看最终拿到的baseMaterial的自定义name属性是哪个？
+    console.log('baseMaterial =====', baseMaterial);
+  }, 3000);
 });
 
 // 矫正坐标
@@ -181,7 +190,7 @@ const createMesh = (data: any, color: string, depth: number) => {
   const materialSettings = {
     map: mapTexture,
     bumpMap: mapTexture,
-    bumpScale: 0.01,
+    bumpScale: 0.1,
     transparent: true,
     opacity: 0.8,
     side: THREE.DoubleSide
@@ -197,18 +206,71 @@ const createMesh = (data: any, color: string, depth: number) => {
   };
   const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
   const material = new THREE.MeshStandardMaterial(materialSettings);
-  return new THREE.Mesh(geometry, material);
+  const mesh = new THREE.Mesh(geometry, material);
+  return mesh;
 };
 
+let baseMaterial: THREE.ShaderMaterial | null = null;
+let baseMaterialArray: THREE.ShaderMaterial[] = [];
 // 绘制每个市的边界
 const createLine = (data: any, depth: number) => {
   const points: any[] = [];
+  baseMaterialArray = [];
   data.forEach((item: any) => {
     const [x, y] = offsetXY(item) as number[];
     points.push(new THREE.Vector3(x, -y, 0));
   });
-  const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-  const upLineMaterial = new THREE.LineBasicMaterial({color: '#ffffff'});
+  // 默认的白色线省份边界
+  // const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+  // const upLineMaterial = new THREE.LineBasicMaterial({color: '#ffffff'});
+
+  const curve = new THREE.CatmullRomCurve3(points, true, 'catmullrom', 0);
+  const lineGeometry = new THREE.TubeGeometry(
+      curve,
+      Math.round(points.length * 0.5),
+      0.01,
+      8,
+      true
+  );
+  const upLineMaterial = new THREE.ShaderMaterial({
+    name: data[0],
+    uniforms: {
+      time: {value: 0},//运动时间
+      len: {value: 0.05},//运动点距离范围
+      size: {value: 0.2},//管道增加宽度
+      color1: {value: new THREE.Color('#FFFFFF')},
+      color2: {value: new THREE.Color('yellow')}
+    },
+    vertexShader: `uniform float time;
+uniform float size;
+uniform float len;
+uniform vec3 color1;
+uniform vec3 color2;
+varying vec3 vColor;
+void main() {
+    vColor = color1;
+    vec3 newPosition = position;
+    float d = uv.x - time;
+
+    if(abs(d) < len) {
+        newPosition = newPosition + normal * size;
+        vColor = color2;
+    }
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+}`,
+    fragmentShader: `
+varying vec3 vColor;
+void main() {
+  gl_FragColor =vec4(vColor, 1.0);
+}`
+  });
+
+  if (data[0][0] === 110.379257) {
+    baseMaterial = upLineMaterial;
+  }
+
+  baseMaterialArray.push(upLineMaterial);
+
   const downLineMaterial = new THREE.LineBasicMaterial({color: '#ffffff'});
 
   const upLine = new THREE.Line(lineGeometry, upLineMaterial);
@@ -276,6 +338,18 @@ const setCenter = (map: THREE.Object3D) => {
   map.position.x = map.position.x - center.x;
   map.position.z = map.position.z - center.z;
 };
+
+let time = 1;
+const animateAction = (material: any) => {
+  if (material) {
+    if (time >= 1.0) {
+      time = 0.0;
+    }
+    time = time + 0.002;
+    material.uniforms.time.value = time;
+  }
+};
+
 
 </script>
 
