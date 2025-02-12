@@ -76,9 +76,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.update();
 
 const animate = () => {
-  baseMaterialArray.forEach((item) => {
-    animateAction(item);
-  });
+  // baseMaterialArray.forEach((item) => {
+  //   animateAction(item);
+  // });
   animateAction(baseMaterial);
   controls.update();
   renderer.render(scene, camera);
@@ -399,6 +399,5 @@ const animateAction = (material: any) => {
     material.uniforms.time.value = time;
   }
 };
-
 </script>
 
