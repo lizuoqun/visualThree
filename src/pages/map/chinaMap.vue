@@ -76,10 +76,10 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.update();
 
 const animate = () => {
-  // baseMaterialArray.forEach((item) => {
-  //   animateAction(item);
-  // });
-  animateAction(baseMaterial);
+  baseMaterialArray.forEach((item) => {
+    animateAction(item);
+  });
+  // animateAction(baseMaterial);
   controls.update();
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
@@ -263,7 +263,7 @@ let baseMaterialArray: THREE.ShaderMaterial[] = [];
 // 绘制每个市的边界
 const createLine = (data: any, depth: number) => {
   const points: any[] = [];
-  baseMaterialArray = [];
+  // baseMaterialArray = [];
   data.forEach((item: any) => {
     const [x, y] = offsetXY(item) as number[];
     points.push(new THREE.Vector3(x, -y, 0));
@@ -276,7 +276,7 @@ const createLine = (data: any, depth: number) => {
   const lineGeometry = new THREE.TubeGeometry(
       curve,
       Math.round(points.length * 0.5),
-      0.01,
+      0.001,
       8,
       true
   );
@@ -395,7 +395,7 @@ const animateAction = (material: any) => {
     if (time >= 1.0) {
       time = 0.0;
     }
-    time = time + 0.002;
+    time = time + 0.000005;
     material.uniforms.time.value = time;
   }
 };
