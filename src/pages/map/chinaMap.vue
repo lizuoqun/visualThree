@@ -1,5 +1,6 @@
 <template>
   <div id="map" class="w-full h-full"/>
+  <el-button @click="colorLight()">添加光源</el-button>
 </template>
 
 <script lang="ts" setup>
@@ -79,7 +80,9 @@ const animate = () => {
   baseMaterialArray.forEach((item) => {
     animateAction(item);
   });
-  // animateAction(baseMaterial);
+  baseLineBorderMaterialArray.forEach((item) => {
+    animateAction(item);
+  });
   controls.update();
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
@@ -96,17 +99,12 @@ onMounted(() => {
 
   setTimeout(() => {
     // 因为这里是全国地图，是遍历得到的，看最终拿到的baseMaterial的自定义name属性是哪个？
-    console.log('baseMaterial =====', baseMaterial);
+    // console.log('baseMaterial =====', baseMaterial);
   }, 3000);
 });
 
 // 矫正坐标
 const offsetXY = d3.geoMercator();
-
-// 随机颜色
-const getRandomColor = () => {
-  return '#' + Math.floor(Math.random() * 16777215).toString(16);
-};
 
 // 根据省市的json数据创建地图
 const createMap = (data: any) => {
@@ -167,9 +165,9 @@ const createMap = (data: any) => {
 const mapTexture = new THREE.TextureLoader().load(mapTextureImage);
 mapTexture.wrapS = THREE.RepeatWrapping;
 mapTexture.wrapT = THREE.RepeatWrapping;
-mapTexture.repeat.set(1, 1);
 mapTexture.needsUpdate = true;
 
+let baseLineBorderMaterialArray: THREE.ShaderMaterial[] = [];
 /**
  * 绘制每个市的区域
  * @param data 坐标数据
@@ -195,7 +193,7 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
   const materialSettings = {
     map: mapTexture,
     bumpMap: mapTexture,
-    bumpScale: 0.1,
+    bumpScale: 1,
     transparent: true,
     opacity: 0.8,
     side: THREE.DoubleSide
@@ -211,6 +209,7 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
   };
   const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
   const material = new THREE.MeshStandardMaterial(materialSettings);
+  console.log(' =====', materialSettings1)
   const mesh = new THREE.Mesh(geometry, material);
 
   let shaderMesh: THREE.Mesh | null = null;
@@ -220,29 +219,48 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
       transparent: true,
       depthTest: false,
       uniforms: {
-        color1: {value: new THREE.Color('#00FFFF')}
+        time: {value: 0.0},
+        num: {value: 5.0},
+        color1: {value: new THREE.Color('#00FFFF')},
+        color2: {value: new THREE.Color('#FFFF40')}
       },
       vertexShader: `
-          varying vec2 vUv;
-          varying vec3 vNormal;
-
-          void main() {
-            vUv=uv;
-            vNormal=normal;
-
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-          }`,
-      fragmentShader: `uniform vec3 color1;
-                      varying vec2 vUv;
-                      varying vec3 vNormal;
-                void main() {
-                  if(vNormal.z==1.0||vNormal.z==-1.0||vUv.y ==0.0){
-                    discard;
-                  } else{
-                    gl_FragColor =vec4(color1,mix(1.0,0.0, vUv.y)) ;
-                  }
-                }`
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        void main() {
+          vUv = uv;
+          vNormal = normal;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }`,
+      // fragmentShader: `
+      //   uniform vec3 color1;
+      //   varying vec2 vUv;
+      //   varying vec3 vNormal;
+      //   void main() {
+      //     if(vNormal.z==1.0||vNormal.z==-1.0||vUv.y ==0.0){
+      //         discard;
+      //     } else{
+      //         gl_FragColor =vec4(color1,mix(1.0,0.0, vUv.y)) ;
+      //     }
+      //   }`
+      fragmentShader: `
+        uniform vec3 color1;
+        uniform vec3 color2;
+        uniform float time;
+        uniform float num;
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        void main() {
+          if(vNormal.z == 1.0 || vNormal.z == -1.0 || vUv.y == 0.0) {
+            discard;
+          } else {
+            // 随着时间移动的多重渐变
+            gl_FragColor = vec4(color1, 1.0 - fract((vUv.y - time) * num));
+          }
+      }`
     });
+
+    baseLineBorderMaterialArray.push(material);
 
     const extrudeSettings = {
       depth: 1,
@@ -253,13 +271,13 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
 
     shaderMesh = new THREE.Mesh(geometry, material);
     shaderMesh.position.z = 1;
+
   }
 
   return [mesh, shaderMesh];
 };
 
-let baseMaterial: THREE.ShaderMaterial | null = null;
-let baseMaterialArray: THREE.ShaderMaterial[] = [];
+const baseMaterialArray: THREE.ShaderMaterial[] = [];
 // 绘制每个市的边界
 const createLine = (data: any, depth: number) => {
   const points: any[] = [];
@@ -289,33 +307,34 @@ const createLine = (data: any, depth: number) => {
       color1: {value: new THREE.Color('#FFFFFF')},
       color2: {value: new THREE.Color('yellow')}
     },
-    vertexShader: `uniform float time;
-uniform float size;
-uniform float len;
-uniform vec3 color1;
-uniform vec3 color2;
-varying vec3 vColor;
-void main() {
-    vColor = color1;
-    vec3 newPosition = position;
-    float d = uv.x - time;
+    vertexShader: `
+      uniform float time;
+      uniform float size;
+      uniform float len;
+      uniform vec3 color1;
+      uniform vec3 color2;
+      varying vec3 vColor;
+      void main() {
+        vColor = color1;
+        vec3 newPosition = position;
+        float d = uv.x - time;
 
-    if(abs(d) < len) {
-        newPosition = newPosition + normal * size;
-        vColor = color2;
-    }
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-}`,
+        if(abs(d) < len) {
+          newPosition = newPosition + normal * size;
+          vColor = color2;
+        }
+       gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+      }`,
     fragmentShader: `
-varying vec3 vColor;
-void main() {
-  gl_FragColor =vec4(vColor, 1.0);
-}`
+        varying vec3 vColor;
+        void main() {
+          gl_FragColor =vec4(vColor, 1.0);
+        }`
   });
 
-  // 把这个经纬度数据加上边界运动效果
+  // 如果只要其中的某一个可以根据这个条件进行过滤
   if (data[0][0] === 110.379257) {
-    baseMaterial = upLineMaterial;
+
   }
 
   baseMaterialArray.push(upLineMaterial);
