@@ -209,7 +209,7 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
   };
   const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
   const material = new THREE.MeshStandardMaterial(materialSettings);
-  console.log(' =====', materialSettings1)
+  console.log(' =====', materialSettings1);
   const mesh = new THREE.Mesh(geometry, material);
 
   let shaderMesh: THREE.Mesh | null = null;
@@ -221,8 +221,7 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
       uniforms: {
         time: {value: 0.0},
         num: {value: 5.0},
-        color1: {value: new THREE.Color('#00FFFF')},
-        color2: {value: new THREE.Color('#FFFF40')}
+        color1: {value: new THREE.Color('#00FFFF')}
       },
       vertexShader: `
         varying vec2 vUv;
@@ -232,32 +231,33 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
           vNormal = normal;
           gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
         }`,
-      // fragmentShader: `
-      //   uniform vec3 color1;
-      //   varying vec2 vUv;
-      //   varying vec3 vNormal;
-      //   void main() {
-      //     if(vNormal.z==1.0||vNormal.z==-1.0||vUv.y ==0.0){
-      //         discard;
-      //     } else{
-      //         gl_FragColor =vec4(color1,mix(1.0,0.0, vUv.y)) ;
-      //     }
-      //   }`
+      // 改变fragmentShader来控制两个不同展示的形式
       fragmentShader: `
         uniform vec3 color1;
-        uniform vec3 color2;
-        uniform float time;
-        uniform float num;
         varying vec2 vUv;
         varying vec3 vNormal;
         void main() {
-          if(vNormal.z == 1.0 || vNormal.z == -1.0 || vUv.y == 0.0) {
-            discard;
-          } else {
-            // 随着时间移动的多重渐变
-            gl_FragColor = vec4(color1, 1.0 - fract((vUv.y - time) * num));
+          if(vNormal.z==1.0||vNormal.z==-1.0||vUv.y ==0.0){
+              discard;
+          } else{
+              gl_FragColor =vec4(color1,mix(1.0,0.0, vUv.y)) ;
           }
-      }`
+        }`
+      // fragmentShader: `
+      //   uniform vec3 color1;
+      //   uniform vec3 color2;
+      //   uniform float time;
+      //   uniform float num;
+      //   varying vec2 vUv;
+      //   varying vec3 vNormal;
+      //   void main() {
+      //     if(vNormal.z == 1.0 || vNormal.z == -1.0 || vUv.y == 0.0) {
+      //       discard;
+      //     } else {
+      //       // 随着时间移动的多重渐变
+      //       gl_FragColor = vec4(color1, 1.0 - fract((vUv.y - time) * num));
+      //     }
+      // }`
     });
 
     baseLineBorderMaterialArray.push(material);
