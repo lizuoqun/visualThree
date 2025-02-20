@@ -11,6 +11,10 @@ import * as d3 from 'd3';
 import ChinaData from '@/assets/mapJson/china.json';
 import CityImage from '@/assets/image/city.png';
 import mapTextureImage from '@/assets/image/map-texture.png';
+import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer';
+import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
+import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
+import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 // import mapTextureImage from '@/assets/image/wall.png';
 
 const HU_NAN = '湖南省';
@@ -84,13 +88,23 @@ const animate = () => {
     animateAction(item);
   });
   controls.update();
+
+
+  // 渲染器是否在渲染每一帧之前自动清除其输出
+  renderer.autoClear = false;
+  // 让渲染器清除颜色、深度或模板缓存
+  renderer.clear();
+  baseCompass.render();
+
   renderer.render(scene, camera);
+
   labelRenderer.render(scene, camera);
   requestAnimationFrame(animate);
 };
 
 onMounted(() => {
   addRenderer();
+  initBloom();
   animate();
   document.getElementById('map')?.appendChild(renderer.domElement);
   mapTextureLight();
@@ -221,7 +235,7 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
       uniforms: {
         time: {value: 0.0},
         num: {value: 5.0},
-        color1: {value: new THREE.Color('#00FFFF')}
+        color1: {value: new THREE.Color('#eba0b3')}
       },
       vertexShader: `
         varying vec2 vUv;
@@ -232,32 +246,31 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
           gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
         }`,
       // 改变fragmentShader来控制两个不同展示的形式
-      fragmentShader: `
-        uniform vec3 color1;
-        varying vec2 vUv;
-        varying vec3 vNormal;
-        void main() {
-          if(vNormal.z==1.0||vNormal.z==-1.0||vUv.y ==0.0){
-              discard;
-          } else{
-              gl_FragColor =vec4(color1,mix(1.0,0.0, vUv.y)) ;
-          }
-        }`
       // fragmentShader: `
       //   uniform vec3 color1;
-      //   uniform vec3 color2;
-      //   uniform float time;
-      //   uniform float num;
       //   varying vec2 vUv;
       //   varying vec3 vNormal;
       //   void main() {
-      //     if(vNormal.z == 1.0 || vNormal.z == -1.0 || vUv.y == 0.0) {
-      //       discard;
-      //     } else {
-      //       // 随着时间移动的多重渐变
-      //       gl_FragColor = vec4(color1, 1.0 - fract((vUv.y - time) * num));
+      //     if(vNormal.z==1.0||vNormal.z==-1.0||vUv.y ==0.0){
+      //         discard;
+      //     } else{
+      //         gl_FragColor =vec4(color1,mix(1.0,0.0, vUv.y)) ;
       //     }
-      // }`
+      //   }`
+      fragmentShader: `
+        uniform vec3 color1;
+        uniform float time;
+        uniform float num;
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        void main() {
+          if(vNormal.z == 1.0 || vNormal.z == -1.0 || vUv.y == 0.0) {
+            discard;
+          } else {
+            // 随着时间移动的多重渐变
+            gl_FragColor = vec4(color1, 1.0 - fract((vUv.y + time) * num));
+          }
+      }`
     });
 
     baseLineBorderMaterialArray.push(material);
@@ -405,6 +418,25 @@ const setCenter = (map: THREE.Object3D) => {
   const center = box.getCenter(new THREE.Vector3());
   map.position.x = map.position.x - center.x;
   map.position.z = map.position.z - center.z;
+};
+
+// 初始化泛光
+let baseCompass: EffectComposer;
+const initBloom = () => {
+  const renderScene = new RenderPass(scene, camera);
+  const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.5,
+      0.5,
+      0
+  );
+  const composer = new EffectComposer(renderer);
+  composer.addPass(renderScene);
+  composer.addPass(bloomPass);
+  const outputPass = new OutputPass();
+  composer.addPass(outputPass);
+
+  baseCompass = composer;
 };
 
 // 改变着色器的时间来控制省边界移动
