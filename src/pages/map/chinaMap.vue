@@ -94,10 +94,18 @@ const animate = () => {
   renderer.autoClear = false;
   // 让渲染器清除颜色、深度或模板缓存
   renderer.clear();
+
+  baseLineBorderMaterialArray.forEach((item: THREE.Material) => {
+    item.visible = false;
+  });
+
   baseCompass.render();
 
-  renderer.render(scene, camera);
+  baseLineBorderMaterialArray.forEach((item: THREE.Material) => {
+    item.visible = true;
+  });
 
+  renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
   requestAnimationFrame(animate);
 };
@@ -225,6 +233,7 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
   const material = new THREE.MeshStandardMaterial(materialSettings);
   console.log(' =====', materialSettings1);
   const mesh = new THREE.Mesh(geometry, material);
+  material.name = name;
 
   let shaderMesh: THREE.Mesh | null = null;
   if ([HU_NAN, GUANG_XI].includes(name)) {
