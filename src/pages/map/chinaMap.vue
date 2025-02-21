@@ -96,7 +96,9 @@ const animate = () => {
   renderer.clear();
 
   baseLineBorderMaterialArray.forEach((item: THREE.Material) => {
-    item.visible = false;
+    if (item.name === HU_NAN) {
+      item.visible = false;
+    }
   });
 
   baseCompass.render();
@@ -239,6 +241,7 @@ const createMesh = (data: any, color: string, depth: number, name: string) => {
   if ([HU_NAN, GUANG_XI].includes(name)) {
     const material = new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
+      name: name,
       transparent: true,
       depthTest: false,
       uniforms: {
