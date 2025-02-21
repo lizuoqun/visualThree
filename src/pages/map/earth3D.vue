@@ -1,9 +1,9 @@
 <!-- 3D地球 -->
 <script setup lang="ts">
 import * as THREE from 'three';
-import initThree, {ThreeObjectInterface} from '../initThree';
+import InitThree, {ThreeObjectInterface} from '../initThree';
 
-const it = new initThree();
+const it = new InitThree();
 
 let threeObject: ThreeObjectInterface = it.allThreeObject;
 
