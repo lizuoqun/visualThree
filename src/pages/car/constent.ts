@@ -19,3 +19,9 @@ export const THREE_WHITE_COLOR = 0xffffff;
  * 黑色
  * */
 export const THREE_BLACK_COLOR = 0x000000;
+
+export const defaultCameraPosition = {
+  x: 0,
+  y: 0,
+  z: 10,
+};

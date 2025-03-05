@@ -3,10 +3,10 @@
 import * as THREE from 'three';
 import InitThree, {ThreeObjectInterface} from '../initThree';
 
-import World_Image from '@/assets/image/world.png';
-import {THREE_WHITE_COLOR} from '@/pages/car/constent';
+import World_Image from '@/assets/image/world2.png';
+import {defaultCameraPosition, THREE_WHITE_COLOR} from '@/pages/car/constent';
 
-const it = new InitThree();
+const it = new InitThree(defaultCameraPosition, false);
 
 let threeObject: ThreeObjectInterface = it.allThreeObject;
 
@@ -14,18 +14,19 @@ onMounted(() => {
   animate();
   const ele = document.getElementById('earth') as HTMLElement;
   ele.appendChild(threeObject.renderer.domElement);
-  addRedCube(threeObject.scene);
+  addEarth(threeObject.scene);
+  addShell(threeObject.scene);
 });
 
 const animate = () => {
   const {renderer, scene, camera, labelRenderer} = threeObject;
+  animateAction();
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
   requestAnimationFrame(animate);
 };
 
-const addRedCube = (scene: THREE.Scene) => {
-
+const addEarth = (scene: THREE.Scene) => {
   const geometry = new THREE.SphereGeometry(4, 128, 128);
   const texture = new THREE.TextureLoader().load(World_Image);
   texture.wrapS = THREE.RepeatWrapping;
@@ -44,6 +45,54 @@ const addRedCube = (scene: THREE.Scene) => {
   scene.add(sphere);
 
   scene.add(addAmbientLight());
+};
+
+let shellMaterial: THREE.ShaderMaterial;
+
+const addShell = (scene: THREE.Scene) => {
+  const geometry = new THREE.SphereGeometry(4.5, 128, 128);
+  // const material = new THREE.MeshBasicMaterial({
+  //   color: 0xffffff,
+  //   transparent: true,
+  //   opacity: 0.2
+  // });
+  shellMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      iTime: {value: 0.0},
+      uColor: {value: new THREE.Color('#dddddd')}
+    },
+    transparent: true,
+    vertexShader: `
+      varying vec2 vUv;
+      void main(){
+        vUv=uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      float PI = acos(-1.0);
+      uniform vec3 uColor;
+      uniform float iTime;
+      varying vec2 vUv;
+      void main(){
+        vec2 uv = vUv + vec2(0.0, iTime);
+        float current = abs(sin(uv.y * PI));
+        gl_FragColor.rgb= uColor;
+        gl_FragColor.a = mix(0.8, 0.0, current);
+      }
+    `
+  });
+  const sphere = new THREE.Mesh(geometry, shellMaterial);
+  scene.add(sphere);
+};
+
+const animateAction = () => {
+  if (shellMaterial) {
+    if (shellMaterial.uniforms.iTime.value > 1) {
+      shellMaterial.uniforms.iTime.value = 0;
+    } else {
+      shellMaterial.uniforms.iTime.value += 0.005;
+    }
+  }
 };
 
 // 添加环境光

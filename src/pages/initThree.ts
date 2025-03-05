@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import {CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
+import {defaultCameraPosition} from './car/constent';
 
 export interface ThreeObjectInterface {
   scene: THREE.Scene;
@@ -22,7 +23,7 @@ class InitThree {
   private readonly controls: OrbitControls;
   private readonly labelRenderer: CSS2DRenderer;
 
-  constructor(cameraPosition = {x: 0, y: 8, z: 8}, showAxesHelper = true) {
+  constructor(cameraPosition = defaultCameraPosition, showAxesHelper = true) {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000);
     this.camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
