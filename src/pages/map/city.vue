@@ -84,14 +84,15 @@ const toCenter = () => {
 
 // 图片加载器
 const ImageLoader = new THREE.ImageLoader();
-let texture: { needsUpdate: boolean; };
+let texture: THREE.Texture;
 const textureOption = {
   wraps: THREE.RepeatWrapping,
   repeat: new THREE.Vector2(10, 10),
   wrapT: THREE.RepeatWrapping
 };
-ImageLoader.load(TextureImage, function (img: any) {
-  texture = new THREE.Texture(img, textureOption);
+ImageLoader.load(TextureImage, (img: any) => {
+  texture = new THREE.Texture(img);
+  Object.assign(texture, textureOption);
   texture.needsUpdate = true;
 });
 
