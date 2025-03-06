@@ -32,22 +32,19 @@ const addEarth = (scene: THREE.Scene) => {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
 
-  const texture1 = new THREE.TextureLoader().load(World_Image);
-  texture1.wrapS = THREE.RepeatWrapping;
-  texture1.wrapT = THREE.RepeatWrapping;
-
   const material = new THREE.MeshStandardMaterial({
     map: texture,
     bumpMap: texture,
     bumpScale: 1
   });
+
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
 
   scene.add(addAmbientLight());
 };
 
-let shellMaterial: THREE.ShaderMaterial;
+let material: THREE.ShaderMaterial;
 
 const addShell = (scene: THREE.Scene) => {
   const geometry = new THREE.SphereGeometry(4.5, 128, 128);
@@ -56,7 +53,35 @@ const addShell = (scene: THREE.Scene) => {
   //   transparent: true,
   //   opacity: 0.2
   // });
-  shellMaterial = new THREE.ShaderMaterial({
+  // material = createShellMaterial();
+  material = createPointMaterial();
+  const sphere = new THREE.Mesh(geometry, material);
+  scene.add(sphere);
+};
+
+const animateAction = () => {
+  if (material) {
+    updateTime();
+  }
+};
+
+const updateTime = () => {
+  if (material.uniforms.iTime.value > 1) {
+    material.uniforms.iTime.value = 0;
+  } else {
+    material.uniforms.iTime.value += 0.005;
+  }
+};
+
+// 添加环境光
+const addAmbientLight = () => {
+  const ambientLight = new THREE.AmbientLight(THREE_WHITE_COLOR, 2); // 添加环境光
+  return ambientLight;
+};
+
+// 创建外围壳发光material
+const createShellMaterial = () => {
+  return new THREE.ShaderMaterial({
     uniforms: {
       iTime: {value: 0.0},
       uColor: {value: new THREE.Color('#dddddd')}
@@ -77,28 +102,49 @@ const addShell = (scene: THREE.Scene) => {
         vec2 uv = vUv + vec2(0.0, iTime);
         float current = abs(sin(uv.y * PI));
         gl_FragColor.rgb= uColor;
-        gl_FragColor.a = mix(0.8, 0.0, current);
+        gl_FragColor.a = mix(1.0, 0.0, current);
       }
     `
   });
-  const sphere = new THREE.Mesh(geometry, shellMaterial);
-  scene.add(sphere);
 };
 
-const animateAction = () => {
-  if (shellMaterial) {
-    if (shellMaterial.uniforms.iTime.value > 1) {
-      shellMaterial.uniforms.iTime.value = 0;
-    } else {
-      shellMaterial.uniforms.iTime.value += 0.005;
-    }
-  }
-};
+// 创建点运动的material
+const createPointMaterial = () => {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      iTime: {value: 0.0},
+      pointNum: {value: new THREE.Vector2(32, 16)},
+      uColor: {value: new THREE.Color('#FFFFFF')}
+    },
+    transparent: true,
+    vertexShader: `
+      varying vec2 vUv;
+      void main(){
+        vUv=uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      float PI = acos(-1.0);
+      uniform vec3 uColor;
+      uniform vec2 pointNum;
+      uniform float iTime;
+      varying vec2 vUv;
+      void main(){
+        vec2 uv = vUv+ vec2(0.0, iTime);
+        float current = abs(sin(uv.y * PI) );
+        if(current < 0.996) {
+          current = current*0.5;
+        }
+        float d = distance(fract(uv * pointNum*2.0), vec2(0.5, 0.5));
 
-// 添加环境光
-const addAmbientLight = () => {
-  const ambientLight = new THREE.AmbientLight(THREE_WHITE_COLOR, 1); // 添加环境光
-  return ambientLight;
+        if(d > current * 0.2) {
+          discard;
+        } else {
+          gl_FragColor =vec4(uColor,current);
+        }
+      }
+      `
+  });
 };
 </script>
 
