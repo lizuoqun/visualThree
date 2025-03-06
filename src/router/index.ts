@@ -6,8 +6,8 @@ export const routes = [
   {path: '/chinaMap', name: '3D地图', component: () => import('@/pages/map/chinaMap.vue')},
   {path: '/city', name: '3D城市', component: () => import('@/pages/map/city.vue')},
   {path: '/city2', name: '3D城市-2', component: () => import('@/pages/map/city2.vue')},
-  {path: '/earth3d', name: '3D地球', component: () => import('@/pages/map/earth3D.vue')},
-  {path: '/canvasEarth', name: '地球', component: () => import('@/pages/map/canvasEarth.vue')},
+  {path: '/earth3d', name: '3D地球&扫光', component: () => import('@/pages/map/earth3D.vue')},
+  {path: '/canvasEarth', name: 'canvas材质地球', component: () => import('@/pages/map/canvasEarth.vue')},
   {path: '/su7', name: 'SU7', component: () => import('@/pages/car/su7.vue')}
 ];
 
