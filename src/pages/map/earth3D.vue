@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import InitThree, {ThreeObjectInterface} from '../initThree';
 
-import World_Image from '@/assets/image/world2.png';
+import World_Image from '@/assets/image/world/blueLight.png';
 import {defaultCameraPosition, THREE_WHITE_COLOR} from '@/pages/car/constent';
 
 const it = new InitThree(defaultCameraPosition, false);
@@ -41,6 +41,11 @@ const addEarth = (scene: THREE.Scene) => {
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
 
+  setInterval(() => {
+    // sphere.rotation.x += 0.001;
+    // sphere.rotation.y += 0.001;
+    // sphere.rotation.z += 0.001;
+  }, 1000 / 60);
   scene.add(addAmbientLight());
 };
 
@@ -48,12 +53,6 @@ let material: THREE.ShaderMaterial;
 
 const addShell = (scene: THREE.Scene) => {
   const geometry = new THREE.SphereGeometry(4.5, 128, 128);
-  // const material = new THREE.MeshBasicMaterial({
-  //   color: 0xffffff,
-  //   transparent: true,
-  //   opacity: 0.2
-  // });
-  // material = createShellMaterial();
   material = createPointMaterial();
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
