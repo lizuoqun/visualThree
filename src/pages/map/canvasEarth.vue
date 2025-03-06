@@ -1,10 +1,26 @@
 <script setup lang="ts">
+import * as THREE from 'three';
 import WORLD_ZH from '@/assets/mapJson/world.zh.json';
+import InitThree, {ThreeObjectInterface} from '@/pages/initThree';
+import {defaultCameraPosition} from '@/pages/car/constent';
+
+const it = new InitThree(defaultCameraPosition, false);
+let threeObject: ThreeObjectInterface = it.allThreeObject;
 
 onMounted(() => {
-  createCanvas();
+  animate();
+  const ele = document.getElementById('earth') as HTMLElement;
+  ele.appendChild(threeObject.renderer.domElement);
 });
 
+
+const animate = () => {
+  const {renderer, scene, camera, labelRenderer} = threeObject;
+  scene.add(createEarth());
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  requestAnimationFrame(animate);
+};
 
 const canvasOptions = {
   bg: '#000080',
@@ -45,7 +61,7 @@ const createCanvas = () => {
   ctx.fill();
 
 
-  //设置地图样式
+  // 设置地图样式
   ctx.strokeStyle = canvasOptions.borderColor;
   ctx.lineWidth = canvasOptions.borderWidth;
 
@@ -55,18 +71,16 @@ const createCanvas = () => {
     ctx.shadowColor = canvasOptions.blurColor;
   }
 
-
-  console.log(WORLD_ZH);
   WORLD_ZH.features.forEach((a) => {
     if (a.geometry.type == 'MultiPolygon') {
-      //多个区块组成
+      // 多个区块组成
       a.geometry.coordinates.forEach((b) => {
         b.forEach((c) => {
           drawRegion(ctx, c);
         });
       });
     } else {
-      //单个区块
+      // 单个区块
       a.geometry.coordinates.forEach((c) => {
         drawRegion(ctx, c);
       });
@@ -75,10 +89,28 @@ const createCanvas = () => {
 
   const app = document.getElementById('app') as HTMLElement;
   app.appendChild(canvas);
+
+  return canvas;
+};
+
+const createEarth = () => {
+
+  const canvas = createCanvas();
+  // 地球用canvas贴图
+  const map = new THREE.CanvasTexture(canvas);
+  map.wrapS = THREE.RepeatWrapping;
+  map.wrapT = THREE.RepeatWrapping;
+
+  const geometry = new THREE.SphereGeometry(4, 128, 128);
+
+  const material = new THREE.MeshBasicMaterial({map: map, transparent: true});
+
+  return new THREE.Mesh(geometry, material);
 };
 
 
 </script>
 
 <template>
+  <div id="earth" class="w-full h-full bg-black"/>
 </template>
