@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import * as THREE from 'three';
 import WORLD_ZH from '@/assets/mapJson/world.zh.json';
+import WORLD_POINT from '@/assets/mapJson/world-point.json';
 import InitThree, {ThreeObjectInterface} from '@/pages/initThree';
 import {defaultCameraPosition} from '@/pages/car/constent';
+
+// https://v.antfin.com/zh-cn/l7/1.x/demo/bubble/point_color.html
 
 const it = new InitThree(defaultCameraPosition, false);
 let threeObject: ThreeObjectInterface = it.allThreeObject;
 
 onMounted(() => {
   animate();
+  const {scene} = threeObject;
+  scene.add(createEarth());
+  addObject3D(scene);
   const ele = document.getElementById('earth') as HTMLElement;
   ele.appendChild(threeObject.renderer.domElement);
 });
@@ -16,7 +22,9 @@ onMounted(() => {
 
 const animate = () => {
   const {renderer, scene, camera, labelRenderer} = threeObject;
-  scene.add(createEarth());
+  // scene.add(createEarth());
+  // scene.add(addObject3D());
+  // scene.add(createBar());
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
   requestAnimationFrame(animate);
@@ -106,6 +114,58 @@ const createEarth = () => {
   const material = new THREE.MeshBasicMaterial({map: map, transparent: true});
 
   return new THREE.Mesh(geometry, material);
+};
+
+let max: number = 0, min: number = 0, range: number = 0;
+
+const addObject3D = (scene: THREE.Scene) => {
+  const lonHelper = new THREE.Object3D(); // 经度旋转辅助对象
+
+  const latHelper = new THREE.Object3D(); // 维度旋转辅助对象
+  lonHelper.add(latHelper);
+
+  const positionHelper = new THREE.Object3D(); // 最终位置辅助对象
+  positionHelper.position.z = 4; // 球体半径是4,让变换位置在球体表面，需z坐标向外偏移1
+  latHelper.add(positionHelper);
+
+
+  WORLD_POINT.forEach((item) => {
+    const g = Number(item.mag);
+    if (g > max) {
+      max = g;
+    }
+    if (g < min) {
+      min = g;
+    }
+  });
+
+  range = max - min;
+
+  WORLD_POINT.forEach((item) => {
+    const boxGeometry = new THREE.BoxGeometry(2, 2, 6);
+    boxGeometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0, 2));
+    createBar(Number(item.lon), Number(item.lat), item.mag, boxGeometry, lonHelper, latHelper, positionHelper, scene);
+  });
+
+  scene.add(lonHelper);
+};
+
+
+const createBar = (lon: number, lat: number, value: number, boxGeometry: THREE.BoxGeometry, lonHelper: THREE.Object3D, latHelper: THREE.Object3D, positionHelper: THREE.Object3D, scene: THREE.Scene) => {
+  const material = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(
+        `rgb(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)})`
+    )
+  });
+  const mesh = new THREE.Mesh(boxGeometry, material);
+  scene.add(mesh);
+  lonHelper.rotation.y = THREE.MathUtils.degToRad(lon) + Math.PI * 0.5;
+  latHelper.rotation.x = THREE.MathUtils.degToRad(-lat);
+
+  positionHelper.updateWorldMatrix(true, false);
+  mesh.applyMatrix4(positionHelper.matrixWorld);
+  const amount = (value - min) / range;
+  mesh.scale.set(0.01, 0.01, THREE.MathUtils.lerp(0.01, 0.5, amount));
 };
 
 
