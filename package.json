@@ -11,6 +11,7 @@
     "@surbowl/world-geo-json-zh": "^2.1.4",
     "@vitejs/plugin-vue": "^5.1.4",
     "d3": "^7.9.0",
+    "dat.gui": "^0.7.9",
     "element-plus": "^2.8.3",
     "gsap": "^3.12.7",
     "three": "^0.168.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@types/d3": "^7.4.3",
+    "@types/dat.gui": "^0.7.13",
     "@types/gsap": "^3.0.0",
     "@types/three": "^0.168.0",
     "@vue/compiler-sfc": "^3.5.6",
