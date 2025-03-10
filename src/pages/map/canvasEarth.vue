@@ -152,18 +152,30 @@ const addObject3D = (scene: THREE.Scene) => {
 
 
 const createBar = (lon: number, lat: number, value: number, boxGeometry: THREE.BoxGeometry, lonHelper: THREE.Object3D, latHelper: THREE.Object3D, positionHelper: THREE.Object3D, scene: THREE.Scene) => {
+  // 给材质添加随机颜色
   const material = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(
-        `rgb(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)})`
-    )
+    // color: new THREE.Color(
+    //     `rgb(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 255)})`
+    // )
   });
+
+  // material.color.setRGB(
+  //     Math.random(),
+  //     Math.random(),
+  //     Math.random()
+  // );
+
   const mesh = new THREE.Mesh(boxGeometry, material);
   scene.add(mesh);
+
+
   lonHelper.rotation.y = THREE.MathUtils.degToRad(lon) + Math.PI * 0.5;
   latHelper.rotation.x = THREE.MathUtils.degToRad(-lat);
+  // console.log(' =====', lon, lat, lonHelper.rotation);
 
   positionHelper.updateWorldMatrix(true, false);
   mesh.applyMatrix4(positionHelper.matrixWorld);
+
   const amount = (value - min) / range;
   mesh.scale.set(0.01, 0.01, THREE.MathUtils.lerp(0.01, 0.5, amount));
 };

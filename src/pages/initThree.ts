@@ -41,7 +41,7 @@ class InitThree {
     this.controls.update();
 
     if (showAxesHelper) {
-      const axesHelper = new THREE.AxesHelper(5);
+      const axesHelper = new THREE.AxesHelper(8);
       this.scene.add(axesHelper);
     }
 

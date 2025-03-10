@@ -1,12 +1,14 @@
 <!-- 3D地球 -->
 <script setup lang="ts">
 import * as THREE from 'three';
+import gsap from 'gsap';
+import * as dat from 'dat.gui';
 import InitThree, {ThreeObjectInterface} from '../initThree';
 
 import World_Image from '@/assets/image/world/blueLight.png';
 import {defaultCameraPosition, THREE_WHITE_COLOR} from '@/pages/car/constent';
 
-const it = new InitThree(defaultCameraPosition, false);
+const it = new InitThree(defaultCameraPosition, true);
 
 let threeObject: ThreeObjectInterface = it.allThreeObject;
 
@@ -40,13 +42,28 @@ const addEarth = (scene: THREE.Scene) => {
 
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
-
-  setInterval(() => {
-    // sphere.rotation.x += 0.001;
-    // sphere.rotation.y += 0.001;
-    // sphere.rotation.z += 0.001;
-  }, 1000 / 60);
+  console.log(' =====', gsap);
+  gsap.to(sphere.rotation, {
+    y: `+= ${2 * Math.PI}`,
+    duration: 10,
+    repeat: -1,
+    ease: 'none'
+  });
   scene.add(addAmbientLight());
+
+  const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
+  boxGeometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0, 4));
+  const boxMaterial = new THREE.MeshBasicMaterial({
+    color: '0xffffff'
+  });
+  const mesh = new THREE.Mesh(boxGeometry, boxMaterial);
+
+  const GUI = new dat.GUI();
+  GUI.add(mesh.position, 'x').min(0).max(10).step(0.01).name('移动x轴');
+  GUI.add(mesh.position, 'y').min(0).max(10).step(0.01).name('移动y轴');
+  GUI.add(mesh.position, 'z').min(0).max(10).step(0.01).name('移动z轴');
+
+  scene.add(mesh);
 };
 
 let material: THREE.ShaderMaterial;
@@ -74,8 +91,7 @@ const updateTime = () => {
 
 // 添加环境光
 const addAmbientLight = () => {
-  const ambientLight = new THREE.AmbientLight(THREE_WHITE_COLOR, 2); // 添加环境光
-  return ambientLight;
+  return new THREE.AmbientLight(THREE_WHITE_COLOR, 2); // 添加环境光
 };
 
 // 创建外围壳发光material
