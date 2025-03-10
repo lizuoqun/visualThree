@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL绘制单个点</title>
+    <script src="./glMatrix-0.9.6.min.js"></script>
+</head>
+<script>
+    var webGL;
+    var projMat4 = mat4.create()
+    var program
+
+    // 顶点着色器
+    var vertexString = `
+        attribute vec4 a_position;
+        uniform mat4 proj;
+        void main(){
+            gl_Position = proj * a_position;
+            gl_PointSize = 60.0;
+        }`;
+
+    // 片元着色器
+    var fragmentString = `
+        void main(){
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }`;
+
+    function init() {
+        initWebGL();
+        initShader();
+        initBuffer();
+        draw();
+    }
+
+
+    function initWebGL() {
+        let webGLdiv = document.getElementById("webgl");
+        webGL = webGLdiv.getContext("webgl");
+        webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight)
+        mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4)
+    }
+
+    function initShader() {
+        // 创建着色器对象（顶点、片元）
+        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+        // 绑定着色器源代码
+        webGL.shaderSource(vsShader, vertexString);
+        webGL.shaderSource(fsShader, fragmentString);
+
+        // 编译着色器对象
+        webGL.compileShader(vsShader);
+        webGL.compileShader(fsShader);
+
+        // 创建程序对象和shader对象进行绑定
+        program = webGL.createProgram();
+        webGL.attachShader(program, vsShader);
+        webGL.attachShader(program, fsShader);
+
+        // webGL和项目中间进行绑定和使用
+        webGL.linkProgram(program);
+        webGL.useProgram(program);
+    }
+
+    function initBuffer() {
+        // 创建一个x=100,y=100的点
+        let pointPosition = new Float32Array([100, 100, 0, 1]);
+        let aPosition = webGL.getAttribLocation(program, "a_position");
+
+        webGL.vertexAttrib4fv(aPosition, pointPosition)
+
+        let uniformProj = webGL.getUniformLocation(program, "proj");
+        webGL.uniformMatrix4fv(uniformProj, false, projMat4)
+    }
+
+    function draw() {
+        webGL.clearColor(0, 0, 0, 1)
+        webGL.clear(webGL.COLOR_BUFFER_BIT)
+        webGL.drawArrays(webGL.POINTS, 0, 1)
+    }
+
+</script>
+
+
+<body onload="init()">
+    <canvas id="webgl" width="500" height="500" />
+</body>
+
+</html>
