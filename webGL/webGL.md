@@ -47,13 +47,13 @@ uniform数据 --> 顶点着色器
 
 varying 变量插值数据
 
-- attribute
+- attribute 存储限定符，必须声明为全局变量，数据将从着色器外部传给该变量。
 - uniform
 
 内置变量
 
-- gl_Position
-- gl_PointSize
+- gl_Position vec4 表示定点位置
+- gl_PointSize float 表示点的尺寸（像素版）默认值为1.0，类型限制，如可以赋值为40.0，但是不能是40。
 - gl_FrontFacing
 
 ### 图元装配
@@ -192,6 +192,7 @@ function initShader() {
 - vertexAttrib4fv 是给顶点进行赋值，也就是顶点着色器中的 gl_Position = proj \* a_position
   - 参数一：是指定了待修改顶点 attribute 变量的存储位置
   - 参数二：是用于设置顶点 attibute 变量的向量值
+  - 拓展：同族函数 vertexAttrib1fv、vertexAttrib2fv、vertexAttrib3fv（其中数字代表几个参数、f表示float）
 - getUniformLocation 是返回 uniform 变量的指针位置
 - uniformMatrix4fv 为 uniform 变量指定矩阵值
   - 参数一：是指定待修改 uniform 变量的存储位置
@@ -238,7 +239,7 @@ function draw() {
 修改 initBuffer() 方法
 
 - 创建一个全局存坐标的 POINTS 数组变量
-- 添加鼠标点击事件，这里需要进行数据处理，原因在于鼠标点击的是基于左上角的 px 位置，而在 webGL 当中需要转换成-1 到 1 之间的值。
+- 添加鼠标点击事件，这里需要进行数据处理，原因在于鼠标点击的是基于左上角的 px 位置，而在 webGL 当中需要转换成-1 到 1 之间的值。（求出targetX 和 targetY，这里偷个懒，里面的1024和768是canvas的宽高，按道理来说应该获取一下，这里就直接写死了）
 - 在前面顶点着色器定义的是 vec4 四维变量，所以将 z 设置为 0 表示在平面，并且 a 的值设置为 1 表示不透明
 - 覆盖单个点的 pointPosition
 - 创建缓冲区：createBuffer()方法是用于储存顶点数据或着色数据的 WebGLBuffer 对象
