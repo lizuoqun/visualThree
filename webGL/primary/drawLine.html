@@ -81,6 +81,16 @@
         webGL.enableVertexAttribArray(aPosition)
         webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0 * 4)
 
+        // 创建elementBuffer
+        let indexPositionArray = [
+            0, 1, 2,
+            2, 3, 0,
+        ]
+        let indexArray = new Uint16Array(indexPositionArray);
+        let indexBuffer = webGL.createBuffer();
+        webGL.bindBuffer(webGL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        webGL.bufferData(webGL.ELEMENT_ARRAY_BUFFER, indexArray, webGL.STATIC_DRAW);
+
         let uniformProj = webGL.getUniformLocation(program, "proj");
         webGL.uniformMatrix4fv(uniformProj, false, projMat4)
 
@@ -92,7 +102,8 @@
         webGL.clear(webGL.COLOR_BUFFER_BIT)
         // webGL.drawArrays(webGL.LINES, 0, size)
         // webGL.drawArrays(webGL.LINE_STRIP, 0, size)
-        webGL.drawArrays(webGL.LINE_LOOP, 0, size)
+        // webGL.drawArrays(webGL.LINE_LOOP, 0, size)
+        webGL.drawElements(webGL.LINE_LOOP, 6, webGL.UNSIGNED_SHORT, 0)
     }
 
 </script>

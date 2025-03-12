@@ -1,4 +1,10 @@
-# webGL 概述及一维点绘制
+> 前言：在学习 threejs 3D 开发的时候以及后续效果制作的时候，最开始还是有些吃力的，并且在其中运用到一些着色器，一步步试坑过来，还是回到最开始的地方来补一下基础，就有了这一个 webGL 的笔记。
+
+> 其中，教程来自于 bilibili【2022 年 WebGL 入门教程（完结）】 https://www.bilibili.com/video/BV1Kb4y1x72q/?p=4&share_source=copy_web&vd_source=41d2dced76db87052ab1d8a28194bd8f
+
+> github 仓库地址：https://github.com/lizuoqun/visualThree/tree/main/webGL
+
+# webGL 概述及点绘制
 
 ## WebGL 容器（坐标系）
 
@@ -48,12 +54,14 @@ uniform数据 --> 顶点着色器
 varying 变量插值数据
 
 - attribute 存储限定符，必须声明为全局变量，数据将从着色器外部传给该变量。
-- uniform
+- uniform 是用来从 js 向顶点、片元着色器传输一致的数据
+  - 两者的定义是一样的<存储限定符><类型><变量名> uniform vec4 u_color;
+  - 约定：attribute 变量以 a*开头，uniform 变量以 u*开头
 
 内置变量
 
 - gl_Position vec4 表示定点位置
-- gl_PointSize float 表示点的尺寸（像素版）默认值为1.0，类型限制，如可以赋值为40.0，但是不能是40。
+- gl_PointSize float 表示点的尺寸（像素版）默认值为 1.0，类型限制，如可以赋值为 40.0，但是不能是 40。
 - gl_FrontFacing
 
 ### 图元装配
@@ -92,7 +100,7 @@ graph LR
 
 以 html 为例，先添加一个目标 canvas 到页面上，并且添加一个 init 方法调用，页面加载完成之后会执行 init 方法
 
-这里还引入了一个 glMatrix.js（用于高性能 WebGL 应用程序的 JavaScript 矩阵和矢量库）[官网在这，这个JS可以在这下载](https://glmatrix.net/)。
+这里还引入了一个 glMatrix.js（用于高性能 WebGL 应用程序的 JavaScript 矩阵和矢量库）[官网在这，这个 JS 可以在这下载](https://glmatrix.net/)。
 
 ```html
 <script src="./glMatrix-0.9.6.min.js"></script>
@@ -192,7 +200,7 @@ function initShader() {
 - vertexAttrib4fv 是给顶点进行赋值，也就是顶点着色器中的 gl_Position = proj \* a_position
   - 参数一：是指定了待修改顶点 attribute 变量的存储位置
   - 参数二：是用于设置顶点 attibute 变量的向量值
-  - 拓展：同族函数 vertexAttrib1fv、vertexAttrib2fv、vertexAttrib3fv（其中数字代表几个参数、f表示float）
+  - 拓展：同族函数 vertexAttrib1fv、vertexAttrib2fv、vertexAttrib3fv（其中数字代表几个参数、f 表示 float）
 - getUniformLocation 是返回 uniform 变量的指针位置
 - uniformMatrix4fv 为 uniform 变量指定矩阵值
   - 参数一：是指定待修改 uniform 变量的存储位置
@@ -239,7 +247,7 @@ function draw() {
 修改 initBuffer() 方法
 
 - 创建一个全局存坐标的 POINTS 数组变量
-- 添加鼠标点击事件，这里需要进行数据处理，原因在于鼠标点击的是基于左上角的 px 位置，而在 webGL 当中需要转换成-1 到 1 之间的值。（求出targetX 和 targetY，这里偷个懒，里面的1024和768是canvas的宽高，按道理来说应该获取一下，这里就直接写死了）
+- 添加鼠标点击事件，这里需要进行数据处理，原因在于鼠标点击的是基于左上角的 px 位置，而在 webGL 当中需要转换成-1 到 1 之间的值。（求出 targetX 和 targetY，这里偷个懒，里面的 1024 和 768 是 canvas 的宽高，按道理来说应该获取一下，这里就直接写死了）
 - 在前面顶点着色器定义的是 vec4 四维变量，所以将 z 设置为 0 表示在平面，并且 a 的值设置为 1 表示不透明
 - 覆盖单个点的 pointPosition
 - 创建缓冲区：createBuffer()方法是用于储存顶点数据或着色数据的 WebGLBuffer 对象
@@ -318,3 +326,136 @@ function draw() {
 }
 ```
 
+# 绘制&变化三角形
+
+## 绘制线
+
+现在已经知道怎么去绘制一个点对象了，并且还知道了绘制多个点可以添加到缓冲区当中进行绘制，现在绘制一些线到 webgl 当中
+
+只需要修改 initBuffer 方法，添加一些线到缓冲区当中，
+
+并且修改 draw 绘制方法，修改绘制目标为线，并且设置绘制的点的数量
+
+- webGL.LINES 在一对顶点之间画一条线
+- webGL.LINE_STRIP 画一条直线到下一个顶点
+- webGL.LINE_LOOP 绘制一条直线到下一个顶点，并将最后一个顶点返回到第一个顶点
+
+```js
+function initBuffer() {
+  // 创建一个x=100,y=100到x=200,y=200到x=200,y=300到x=300,y=200的线
+  let linePositionArray = [
+    100, 100, 0, 1.0, 200, 200, 0, 1.0, 200, 300, 0, 1.0, 300, 200, 0, 1.0,
+  ];
+  let linePosition = new Float32Array(linePositionArray);
+  let aPosition = webGL.getAttribLocation(program, "a_position");
+
+  let lineBuffer = webGL.createBuffer();
+  webGL.bindBuffer(webGL.ARRAY_BUFFER, lineBuffer);
+  webGL.bufferData(webGL.ARRAY_BUFFER, linePosition, webGL.STATIC_DRAW);
+  webGL.enableVertexAttribArray(aPosition);
+  webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0 * 4);
+
+  let uniformProj = webGL.getUniformLocation(program, "proj");
+  webGL.uniformMatrix4fv(uniformProj, false, projMat4);
+
+  draw(linePositionArray.length / 4);
+}
+
+function draw(size) {
+  webGL.clearColor(0, 0, 0, 1);
+  webGL.clear(webGL.COLOR_BUFFER_BIT);
+  // webGL.drawArrays(webGL.LINES, 0, size)
+  // webGL.drawArrays(webGL.LINE_STRIP, 0, size)
+  webGL.drawArrays(webGL.LINE_LOOP, 0, size);
+}
+```
+
+## 绘制三角形
+
+举一反三，线的绘制也是加在了缓冲区，那么三角也是同样的，只需要修改一个 drawArrays 方法，其中类型可选
+
+- TRIANGLE_STRIP 绘制一个三角带
+- TRIANGLE_FAN 绘制一个三角扇
+- TRIANGLES 绘制一个三角形
+
+```js
+webGL.drawArrays(webGL.TRIANGLE_STRIP, 0, size);
+```
+
+## 绘制五角星
+
+绘制五角星也就是将五角星的十个顶点的位置弄出来，如下 fivePointArray 变量，这里是基于 webgl 的坐标系了，那么在前面顶点着色器的地方就需要去掉 `gl_Position = proj * a_position` 而是改为 `gl_Position = a_position`，最后选择绘制 LINE_LOOP 类型的线也就完成了五角星的绘制
+
+```js
+let fivePointArray = [
+  0, 0.5, 0, 1, 0.17, 0.17, 0, 1, 0.5, 0, 0, 1, 0.17, -0.17, 0, 1, 0.33, -0.67,
+  0, 1,
+
+  0, -0.33, 0, 1, -0.33, -0.67, 0, 1, -0.17, -0.17, 0, 1, -0.5, 0, 0, 1, -0.17, 0.17,
+  0, 1,
+];
+```
+
+## 补充 drawArrays & drawElements
+
+前面已经使用过了 drawArrays 方法了，下面同样的补充使用 drawElements 方法
+
+```js
+// 创建elementBuffer
+let indexPositionArray = [0, 1, 2, 2, 3, 0];
+let indexArray = new Uint16Array(indexPositionArray);
+let indexBuffer = webGL.createBuffer();
+webGL.bindBuffer(webGL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+webGL.bufferData(webGL.ELEMENT_ARRAY_BUFFER, indexArray, webGL.STATIC_DRAW);
+
+webGL.drawElements(webGL.LINE_LOOP, 6, webGL.UNSIGNED_SHORT, 0);
+```
+
+在 WebGL 中，`drawArrays`和`drawElements`是两种主要的绘制方法，它们各有优缺点，适用于不同场景。以下是它们的对比总结：
+
+---
+
+**gl.drawArrays(mode, first, count)**
+
+- 优点：
+
+  - 简单直接：直接根据顶点缓冲区的数据顺序绘制，无需额外索引数据。
+  - 适合简单几何体：当顶点数据没有重复（如粒子系统或完全独立的三角形）时更高效。
+  - 动态数据友好：如果顶点数据频繁变化（如实时生成几何体），直接操作顶点缓冲区可能更简单。
+  - 内存占用低：无需存储索引数据，节省内存
+
+- 缺点：
+  - 数据冗余：若顶点被多个图元共享（如立方体、复杂网格），会重复存储相同顶点，增加内存和带宽开销。
+  - 性能限制：重复顶点导致 GPU 多次处理相同数据，可能降低渲染效率（尤其是复杂模型）
+
+---
+
+**gl.drawElements(mode, count, type, offset)**
+
+- 优点：
+  - 顶点复用：通过索引数组引用顶点，共享顶点仅存储一次，减少内存占用和 GPU 处理次数。
+  - 适合复杂模型：对共享顶点多的模型（如网格、角色模型）效率更高，尤其适合静态或低频更新的数据。
+  - 带宽优化：传输到 GPU 的数据量更小（索引通常用`Uint16Array`或`Uint32Array`，体积远小于顶点属性）。
+- 缺点：
+  - 复杂度增加：需要额外维护索引缓冲区，对动态顶点数据的管理更复杂（需同步更新顶点和索引）。
+  - 额外绑定步骤：必须绑定`ELEMENT_ARRAY_BUFFER`（索引缓冲）。
+  - 索引类型限制：索引类型（`UNSIGNED_SHORT`/`UNSIGNED_INT`）可能限制最大顶点数量。
+
+---
+
+**对比总结**
+
+| **场景**               | **推荐方法**   | **理由**                            |
+| ---------------------- | -------------- | ----------------------------------- |
+| 顶点无共享（如粒子）   | `drawArrays`   | 无需索引，避免冗余开销。            |
+| 顶点大量共享（如网格） | `drawElements` | 复用顶点显著减少数据量和 GPU 计算。 |
+| 动态顶点数据频繁更新   | `drawArrays`   | 索引同步复杂，直接操作顶点更简单。  |
+| 静态或低频更新数据     | `drawElements` | 索引复用优势明显，长期性能更优。    |
+
+---
+
+**实际建议**
+
+- 优先考虑`drawElements`：大多数 3D 模型（如游戏角色、场景物体）通过索引复用顶点能显著优化性能。
+- 仅在必要时用`drawArrays`：当顶点复用率低或数据频繁动态变化时使用。
+- 注意索引类型：根据顶点数量选择`Uint16Array`（最多 65535 顶点）或`Uint32Array`（更多顶点，但兼容性需检查）
