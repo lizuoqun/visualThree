@@ -459,3 +459,45 @@ webGL.drawElements(webGL.LINE_LOOP, 6, webGL.UNSIGNED_SHORT, 0);
 - 优先考虑`drawElements`：大多数 3D 模型（如游戏角色、场景物体）通过索引复用顶点能显著优化性能。
 - 仅在必要时用`drawArrays`：当顶点复用率低或数据频繁动态变化时使用。
 - 注意索引类型：根据顶点数量选择`Uint16Array`（最多 65535 顶点）或`Uint32Array`（更多顶点，但兼容性需检查）
+
+## 平移、旋转、缩放
+
+平移：从(x,y,z)平移到(x1,y1,z1)的位置
+
+```js
+x1 = x + Tx;
+y1 = y + Ty;
+z1 = z + Tz;
+```
+
+旋转：(旋转轴、旋转方向、旋转角度)
+
+```js
+// 最开始利用三角函数和半径来表示两个点的位置
+x = r cos a
+y = r sin a
+
+
+x1 = r cos(a + b)
+y1 = r sin(a + b)
+
+// 三角函数两角和公式
+sin(a + b) = sina * cosb + cosa * sinb
+cos(a + b) = cosa * cosb - sina * sinb
+
+// 那么对x1和y1进行化简就得到
+x1 = r cos(a + b) = r cosa * cosb - r sina * sinb
+y1 = r sin(a + b) = r cosa * sinb + r sina * cosb
+
+// 再用x和y进行替换
+x1 = x cosb - y sinb
+y1 = x sinb + y cosb
+```
+
+缩放：
+
+```js
+x1 = x * scale;
+y1 = y * scale;
+z1 = z * scale;
+```
