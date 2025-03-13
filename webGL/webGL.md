@@ -328,7 +328,7 @@ function draw() {
 }
 ```
 
-# 绘制&变化三角形
+# 绘制&变化多边形
 
 ## 绘制线
 
@@ -635,3 +635,135 @@ webGL.uniform1f(uTranslateY, translateY);
 // 这个方法是在initBuffer当中的，可以添加requestAnimationFrame进行实时更新，
 requestAnimationFrame(initBuffer);
 ```
+
+# WebGL API 总结
+
+## 获取 WebGL 上下文
+
+可以获取一个上下文， 也可以说返回一个可以在 canvas 画布上绘图的环境，也可以说返回一个具有各种方法和属性的对象，当 getContext()方法的参数是 2d 时，返回的是一个 2D 绘图环境；当 getContext()方法的参数是 webgl 时， 返回的是一个 3D 绘图环境，也就是返回一个具有系列绘图方法和属性的 CanvasRenderingContext 对象，该对象具有一系列方法和属性，可以和 Javascript 编程语言、GLSL ES 着色器语言相互配合完成一个三维场景的构建。
+
+```js
+const canvas = document.getElementById("canvas");
+const webGL =
+  canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+```
+
+## 类型数组
+
+最大的作用就是提升了数组的性能，浏览器事先知道数组中的数据类型，故而处理起来更有效率
+
+> js 中 Array 的内部实现是链表，可以动态增大减少元素，但是元素多的话，性能会比较差，类型化数组管理的是连续内存区域，知道了这块内存的起始位置，可以通过起始位置＋ N \* 偏移量（一次加法一次乘法操作）访问到第 N 个位置的元素，而 Array 的话就需要通过链表一个一个的找下去
+
+webGL 使用的各种类型化数组
+
+| 数组类型     | 每个元素所占字节数 | 描述               |
+| ------------ | ------------------ | ------------------ |
+| Int8Array    | 1                  | 8 位有符号整数     |
+| Uint8Array   | 1                  | 8 位无符号整数     |
+| Int16Array   | 2                  | 16 位有符号整数    |
+| Uint16Array  | 2                  | 16 位无符号整数    |
+| Int32Array   | 4                  | 32 位有符号整数    |
+| Uint32Array  | 4                  | 32 位无符号整数    |
+| Float32Array | 4                  | 单精度 32 位浮点数 |
+| Float64Array | 8                  | 双精度 64 位浮点数 |
+
+类型化数组的方法、属性及常量
+
+| 方法、属性及常量   | 描述                                            |
+| ------------------ | ----------------------------------------------- |
+| get(index)         | 获取 index 位置的元素                           |
+| set(index, value)  | 设置第 x 位置的元素值为 value                   |
+| set(array, offset) | 从第 offset 个元素开始将数组 array 的值填充进去 |
+| length             | 获取类型化数组的长度                            |
+| BYTES_PER_ELEMENT  | 数组中每个元素的字节数                          |
+
+类型化数组不支持 pop、push 方法，创建类型化数组只能使用 new
+
+> 数据的用途不同，要求的精度和形式自然不同，比如顶点索引使用整数即可，根据顶点的数量可以选择 Uint8、Uint16、Uint32 中的哪一种整型数据，顶点的位置一般使用浮点数来表示，浮点数可以选择不同的精度表示。
+
+## 缓冲区配置
+
+### getAttribLocation(program,attributeName)
+
+> program 程序对象
+>
+> attributeName 顶点着色器程序中的顶点变量名
+>
+> 执行该方法返回顶点着色器中顶点变量的索引地址
+
+### 顶点数据配置&顶点索引配置
+
+请参考 补充 drawArrays & drawElements
+
+### createBuffer() & deleteBuffer()
+
+通过 createBuffer 创建得到的 buffer【在 GPU 控制的显存上创建一个缓冲区用来存储顶点或顶面索引数据】，可以通过 deleteBuffer(buffer)进行删除缓冲区
+
+### bindBuffer(target,buffer)
+
+target
+
+- gl.ARRAY_BUFFER：表示顶点缓冲区
+- gl.ELEMENT_ARRAY_BUFFER：表示顶点索引缓冲区
+
+### bufferData(target,data,usage)
+
+bufferData()方法的作用是把 CPU 控制的主存中类型数组数据传入 GPU 控制的显存顶点或顶点索引缓冲区中
+
+- target：同 bindBuffer()方法中的 target
+- data：类型数组变量名：表示要传入缓冲区中的数组数据
+- usage：通过不同的值控制传入缓冲区数据的方式、GPU 使用缓冲区调用数据方式
+  - gl.STATIC_DRAW：静态绘制模式
+  - gl.STREAM_DRAW：流绘制模式
+  - gl.DYNAMIC_DRAW：动态绘制模式
+
+### vertexAttribPointer(location,size,type,normalized,stride,offset)
+
+顶点索引缓冲区不需要该方法，该方法的作用是规定 GPU 从顶点缓冲去中读取数据的方式，很多时候为了提高顶点数据的传输读取效率，往往会把顶点位置、顶点颜色、顶点法向量、纹理坐标交叉定义在一个类型数组中， 一次性传入顶点缓冲区中，CPU 和 GPU 不需要多次通信，只要执行一次 databuffer()方法，这时候 GPU 为了使用顶点缓冲去区的不同用途数据，就要按照一定规律读取，所以类型数据中的数据会把同一个顶点的所有用途数据连续放在一起， 不同顶点的数据依次排列。
+
+### enableVertexAttribArray(location)
+
+顶点缓冲区和 GPU 渲染管线之间存在一个硬件单元可以决定 GPU 是否能读取顶点缓冲区中的顶点数据，开启方法是 enableVertexAttribArray(),能开启自然能够关闭，关闭的方法是 disableVertexAttribArray()， 两个方法的参数都是顶点着色器程序中顶点变量的索引位置
+
+## 编译着色器
+
+### createShader(shaderType)
+
+创建着色器对象，参数是着色器类型,标记一个着色器程序会被 GPU 渲染管线上哪一个着色器执行，
+
+- gl.VERTEX_SHADER 表示该着色器程序编译后被顶点着色器执行
+- gl.FRAGMENT_SHADER 表示该着色器程序编译后被片元着色器执行
+
+### shaderSource(shaderObject, shaderSource)
+
+把字符串形式的顶点着色器代码、片元着色器的代码分配给各自的着色器对象
+
+### compileShader(shaderSource)
+
+作用是编译顶点着色器程序和片元着色器程序，通过参数 shaderSource 指定着色器程序源码源码，该参数的具体值是字符串格式着色器程序变量名
+
+### createProgram()
+
+创建程序对象，程序对象存在的意义是为了实现 CPU 和 GPU 的通信，控制 GPU 着色器的工作状态，切换不同的着色器程序
+
+### attachShader(program,shaderObject)
+
+绑定着色器对象到一个程序对象上，每个程序对象就关联了一组顶点着色器程序、片元着色器程序，第一个参数 program 表示目标程序对象，第二个参数 shaderObject 表示你要绑定的着色器对象。
+
+### linkProgram(program)
+
+在执行 useProgram 方法之前，要先连接程序对象 program 的顶点和片元着色器程序,检查着色程序的错误。 通过连接测试后，才能通过 useprogram 方法把着色器程序传递给 GPU，否则报错。
+
+### useProgram(program)
+
+定义 useProgram()方法调用程序对象 program，执行 WebGL 绘制函数 drawArrays()的时候，WebGL 系统会把程序对象对应的顶点、片元着色器程序传递 GPU 渲染管线的顶点、片元着色器功能单元。 同一时刻 GPU 只能配置一组顶点、片元着色器程序，也就是说如果你定义了多个程序对象，分别关联了一组顶点、片元着色器程序，不会同时传递给 GPU。 在代码中 useProgram 的特点是当再次调用方法 useProgram，使用新的 program 程序对象作为新的参数，再次执行绘制函数的时候 CPU 会与 GPU 进行通信， 给 GPU 传入新程序对象 program 对应的顶点、片元着色器程序，这时候就实现了 GPU 着色器程序的切换，每次切换都会耗费一定的硬件资源，可以简单的类比 CPU 线程的切换。 一般复杂的场景都会编写多套着色器程序，放在文件中，供 WebGL 程序调用，比如有纹理贴图和没有纹理贴图的时候着色器程序就不同。
+
+## 删除对象
+
+### deleteShader(shaderObject)
+
+参数指定着色器对象变量名 shaderObject，定义要删除的着色器对象，如果已经执行 attachShader()方法把着色器对象绑在程序对象 program 上， 系统不会立即执行 deleteShader()定义的删除操作，如果没有程序对象再使用本着色器对象，deleteShader()定义的删除操作就会执行，释放内存。
+
+### deleteProgram(program)
+
+deleteProgram()方法的作用是删除程序对象，参数 program 是程序对象变量名，指定要删除的程序对象，如果已经使用方法 useProgram()调用了该程序对象， 该方法在程序中不是立即执行，删除程序对象的原则是该程序对象 program 不再使用，所谓不再使用就是通过方法 useProgram(program)调用新的程序对象，了解 useProgram()用法可以知道， 执行 useProgram()调用新的程序对象，原来的程序对象 program 不再使用。
