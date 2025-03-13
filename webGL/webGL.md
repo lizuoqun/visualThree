@@ -12,6 +12,8 @@ WebGL 使用的是正交右手坐标系，且每个方向都有可使用的值�
 x，y，z 的区间都是-1 到 1
 注：这些值与 Canvas 的尺寸无关，无论 Canvas 的长宽比是多少，WebGL 的区间值都是一致的
 
+<image src="./blog/webgl坐标系.png"/>
+
 ## WebGL 渲染管线
 
 ```mermaid
@@ -462,6 +464,8 @@ webGL.drawElements(webGL.LINE_LOOP, 6, webGL.UNSIGNED_SHORT, 0);
 
 ## 平移、旋转、缩放
 
+### 数学层面变化###
+
 平移：从(x,y,z)平移到(x1,y1,z1)的位置
 
 ```js
@@ -500,4 +504,75 @@ y1 = x sinb + y cosb
 x1 = x * scale;
 y1 = y * scale;
 z1 = z * scale;
+```
+
+### webGL 中变换
+
+以旋转为例：修改顶点着色器当中的 position 定位坐标，将旋转对应的数学公式带入到 x 和 y，其中 z 为 0 表示在当前平面
+
+利用 uniform 传入一个角度变量，然后通过 uniform 传入到顶点着色器中，然后通过 glsl 语言进行计算
+
+```js
+/**
+ * 就是将这个计算得来的公式赋值给gl_Position，并且这个类型是vec4，所以要用vec4这个包一层
+ * x1 = x cosb - y sinb
+ * y1 = x sinb + y cosb
+ */
+var vertexString = `
+  attribute vec4 a_position;
+  uniform float angle;
+  void main(){
+      gl_Position = vec4(a_position.x * cos(angle) - a_position.y * sin(angle), a_position.x * sin(angle) + a_position.y * cos(angle),0,1);
+      gl_PointSize = 40.0;
+  }`;
+```
+
+之后利用前面用过的 webGL 当中的方法去传递一个 angle 给到顶点着色器就完成了旋转
+
+- 获取 uniform 变量
+- 传递角度值，表示 90 度的角度，也就是 1/2 PI
+- 给顶点着色器设置 angle
+- 绘制
+
+```js
+let uAngle = webGL.getUniformLocation(program, "angle");
+angle = (90 * Math.PI) / 180;
+webGL.uniform1f(uAngle, angle);
+draw();
+```
+
+那么在这里我们还可以让他一直转圈圈，利用定时器去给角度做累加，每加一次角度变大一次也就完成了旋转
+
+```js
+let uAngle = webGL.getUniformLocation(program, "angle");
+let count = 0;
+
+setInterval(() => {
+  count++;
+  angle = (count * Math.PI) / 180;
+  webGL.uniform1f(uAngle, angle);
+  draw(triangleArray.length / 4);
+}, 20);
+```
+
+那么同样的举一反三，平移和缩放的代码也很简单了，修改顶点着色器的代码，
+
+```js
+// 平移
+var vertexString = `
+  attribute vec4 a_position;
+  uniform float translation;
+  void main(){
+      gl_Position = vec4(a_position.x + translation, a_position.y + translation, 0 ,1);
+      gl_PointSize = 40.0;
+  }`;
+
+// 缩放
+var vertexString = `
+  attribute vec4 a_position;
+  uniform float scales;
+  void main(){
+      gl_Position = vec4(a_position.x * scale, a_position.y * scale, 0 ,1);
+      gl_PointSize = 40.0;
+  }`;
 ```
