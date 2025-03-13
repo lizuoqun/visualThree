@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL snake</title>
+    <script src="./glMatrix-0.9.6.min.js"></script>
+</head>
+<script>
+    var webGL;
+    var projMat4 = mat4.create()
+    var program
+
+    // 顶点着色器
+    var vertexString = `
+        attribute vec4 a_position;
+        uniform float translateX;
+        uniform float translateY;
+        uniform float angle;
+        void main(){
+            gl_Position = vec4(a_position.x + translateX, a_position.y + translateY, 0, 1);
+            gl_PointSize = 40.0;
+        }`;
+
+    // 片元着色器
+    var fragmentString = `
+        void main(){
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }`;
+
+    function init() {
+        initWebGL();
+        initEvent();
+        initShader();
+        initBuffer();
+    }
+
+
+    function initWebGL() {
+        let webGLdiv = document.getElementById("webgl");
+        webGL = webGLdiv.getContext("webgl");
+        webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight)
+        mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4)
+    }
+
+    function initShader() {
+        // 创建着色器对象（顶点、片元）
+        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+        // 绑定着色器源代码
+        webGL.shaderSource(vsShader, vertexString);
+        webGL.shaderSource(fsShader, fragmentString);
+
+        // 编译着色器对象
+        webGL.compileShader(vsShader);
+        webGL.compileShader(fsShader);
+
+        // 创建程序对象和shader对象进行绑定
+        program = webGL.createProgram();
+        webGL.attachShader(program, vsShader);
+        webGL.attachShader(program, fsShader);
+
+        // webGL和项目中间进行绑定和使用
+        webGL.linkProgram(program);
+        webGL.useProgram(program);
+    }
+
+    let countX = 0
+    let countY = 0
+    let speed = 0.1
+
+
+    function initEvent() {
+        document.onkeydown = handleKeyDown
+    }
+
+    function handleKeyDown(e) {
+        console.log(e.code)
+        const angle = e.code
+        if (angle === 'ArrowUp' || angle === 'KeyW') {
+            countY += speed
+        } else if (angle === 'ArrowDown' || angle === 'KeyS') {
+            countY -= speed
+        } else if (angle === 'ArrowLeft' || angle === 'KeyA') {
+            countX -= speed
+        } else if (angle === 'ArrowRight' || angle === 'KeyD') {
+            countX += speed
+        } else if (angle === 'Space') {
+            speed += 0.1
+        }
+    }
+
+    function initBuffer() {
+        // 创建一个x=100,y=100到x=200,y=200的线
+        let triangleArray = [
+            0.1, 0.1, 0, 1.0,
+            0.2, 0.2, 0, 1.0,
+            0.2, 0.3, 0, 1.0,
+        ]
+        let trianglePosition = new Float32Array(triangleArray);
+        let aPosition = webGL.getAttribLocation(program, "a_position");
+
+        let triangleBuffer = webGL.createBuffer()
+        webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer)
+        webGL.bufferData(webGL.ARRAY_BUFFER, trianglePosition, webGL.STATIC_DRAW)
+        webGL.enableVertexAttribArray(aPosition)
+        webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0 * 4)
+
+        let uTranslateX = webGL.getUniformLocation(program, "translateX");
+        let uTranslateY = webGL.getUniformLocation(program, "translateY");
+        let translateX = countX;
+        let translateY = countY;
+        webGL.uniform1f(uTranslateX, translateX)
+        webGL.uniform1f(uTranslateY, translateY)
+        draw(triangleArray.length / 4)
+
+        requestAnimationFrame(initBuffer)
+    }
+
+    /**
+     * @name draw
+     * @function
+     * @param {undefined} size
+     * @description
+     */
+    function draw(size) {
+        webGL.clearColor(0, 0, 0, 1)
+        webGL.clear(webGL.COLOR_BUFFER_BIT)
+        webGL.drawArrays(webGL.TRIANGLE_STRIP, 0, size)
+    }
+
+</script>
+
+
+<body onload="init()">
+    <canvas id="webgl" width="500" height="500" />
+</body>
+
+</html>

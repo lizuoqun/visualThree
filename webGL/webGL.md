@@ -576,3 +576,62 @@ var vertexString = `
       gl_PointSize = 40.0;
   }`;
 ```
+
+## 事件控制变换
+
+在 webGL 当中绘制了一个三角形，添加键盘监听事件从而改变其位置
+
+修改顶点着色器，其中设定 x 和 y 移动的位置（translateX、translateY），然后更新位置
+
+```js
+var vertexString = `
+        attribute vec4 a_position;
+        uniform float translateX;
+        uniform float translateY;
+        void main(){
+            gl_Position = vec4(a_position.x + translateX, a_position.y + translateY, 0, 1);
+            gl_PointSize = 40.0;
+        }`;
+```
+
+监听键盘事件去改变全局变量，改变 countX 和 countY，这里还添加了一个速度，也可以去修改
+
+```js
+let countX = 0;
+let countY = 0;
+let speed = 0.1;
+
+function initEvent() {
+  document.onkeydown = handleKeyDown;
+}
+
+function handleKeyDown(e) {
+  console.log(e.code);
+  const angle = e.code;
+  if (angle === "ArrowUp" || angle === "KeyW") {
+    countY += speed;
+  } else if (angle === "ArrowDown" || angle === "KeyS") {
+    countY -= speed;
+  } else if (angle === "ArrowLeft" || angle === "KeyA") {
+    countX -= speed;
+  } else if (angle === "ArrowRight" || angle === "KeyD") {
+    countX += speed;
+  } else if (angle === "Space") {
+    speed += 0.1;
+  }
+}
+```
+
+最后就是和前面一样，将顶点着色器当中的 translateX 和 translateY 进行更新，然后绘制
+
+```js
+let uTranslateX = webGL.getUniformLocation(program, "translateX");
+let uTranslateY = webGL.getUniformLocation(program, "translateY");
+let translateX = countX;
+let translateY = countY;
+webGL.uniform1f(uTranslateX, translateX);
+webGL.uniform1f(uTranslateY, translateY);
+
+// 这个方法是在initBuffer当中的，可以添加requestAnimationFrame进行实时更新，
+requestAnimationFrame(initBuffer);
+```
