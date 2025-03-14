@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL 绘制纹理效果</title>
+    <script src="./glMatrix-0.9.6.min.js"></script>
+</head>
+<script>
+    var webGL;
+    var program
+
+    // 顶点着色器
+    var vertexString = `
+        attribute vec4 a_position;
+        void main(){
+            gl_Position = a_position;
+            gl_PointSize = 64.0;
+        }`;
+
+    // 片元着色器
+    var fragmentString = `
+        precision mediump float;
+        uniform sampler2D texture;
+        void main(){
+            vec4 color = texture2D(texture, gl_PointCoord);
+            if(color.a < 0.1){
+                discard;
+            }
+            gl_FragColor = color;
+        }`;
+
+    function init() {
+        initWebGL();
+        initShader();
+        initBuffer();
+        draw();
+    }
+
+
+    function initWebGL() {
+        let webGLdiv = document.getElementById("webgl");
+        webGL = webGLdiv.getContext("webgl");
+        webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight)
+    }
+
+    function initShader() {
+        // 创建着色器对象（顶点、片元）
+        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+        // 绑定着色器源代码
+        webGL.shaderSource(vsShader, vertexString);
+        webGL.shaderSource(fsShader, fragmentString);
+
+        // 编译着色器对象
+        webGL.compileShader(vsShader);
+        webGL.compileShader(fsShader);
+
+        // 创建程序对象和shader对象进行绑定
+        program = webGL.createProgram();
+        webGL.attachShader(program, vsShader);
+        webGL.attachShader(program, fsShader);
+
+        // webGL和项目中间进行绑定和使用
+        webGL.linkProgram(program);
+        webGL.useProgram(program);
+    }
+
+
+    const POINTS = [
+        0.1, 0.3, 0, 1,
+        -0.1, 0.3, 0, 1,
+        0.2, 0.3, 0, 1,
+        0.1, -0.3, 0, 1
+    ]
+    let uTexture;
+    function initBuffer() {
+        let aPosition = webGL.getAttribLocation(program, "a_position");
+        let pointPosition = new Float32Array(POINTS);
+
+        let pointBuffer = webGL.createBuffer()
+
+        webGL.bindBuffer(webGL.ARRAY_BUFFER, pointBuffer)
+
+        webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW)
+
+        webGL.enableVertexAttribArray(aPosition)
+
+        webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0 * 4)
+
+        webGL.vertexAttrib4fv(aPosition, pointPosition)
+
+        uTexture = webGL.getUniformLocation(program, "texture");
+        webGL.enable(webGL.BLEND)
+        webGL.blendFunc(webGL.SRC_ALPHA, webGL.ONE_MINUS_SRC_ALPHA)
+
+        initTexture()
+    }
+
+    function initTexture() {
+        let textureHandle = webGL.createTexture();
+        textureHandle.image = new Image();
+        textureHandle.image.src = "./point64.png"
+        textureHandle.image.onload = () => {
+            handleLoadedTexture(textureHandle)
+        }
+    }
+
+    function handleLoadedTexture(texture) {
+        webGL.bindTexture(webGL.TEXTURE_2D, texture);
+        webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.NEAREST);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.NEAREST);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.REPEAT);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_T, webGL.REPEAT);
+        webGL.uniform1i(uTexture, 0);
+        draw()
+    }
+
+    function draw() {
+        webGL.clearColor(0, 0, 0, 1)
+        webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT)
+        webGL.drawArrays(webGL.POINTS, 0, POINTS.length)
+    }
+
+</script>
+
+
+<body onload="init()">
+    <canvas id="webgl" width="1024" height="768" />
+</body>
+
+</html>

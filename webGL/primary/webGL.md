@@ -4,6 +4,7 @@
 
 > 仓库地址：
 > github https://github.com/lizuoqun/visualThree/tree/main/webGL
+> 
 > gitee https://gitee.com/modify_lzq/visualThree
 
 # webGL 概述及点绘制
@@ -14,7 +15,7 @@ WebGL 使用的是正交右手坐标系，且每个方向都有可使用的值�
 x，y，z 的区间都是-1 到 1
 注：这些值与 Canvas 的尺寸无关，无论 Canvas 的长宽比是多少，WebGL 的区间值都是一致的
 
-<image src="./blog/webgl坐标系.png"/>
+<image src="https://i-blog.csdnimg.cn/direct/13b6c922583e49f092676ed72612e1e0.png#pic_center"/>
 
 ## WebGL 渲染管线
 
