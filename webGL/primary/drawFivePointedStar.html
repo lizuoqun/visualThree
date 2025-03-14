@@ -8,12 +8,12 @@
     <script src="./glMatrix-0.9.6.min.js"></script>
 </head>
 <script>
-    var webGL;
-    var projMat4 = mat4.create()
-    var program
+  let webGL;
+  const projMat4 = mat4.create();
+  let program;
 
-    // 顶点着色器
-    var vertexString = `
+  // 顶点着色器
+  const vertexString = `
         attribute vec4 a_position;
         uniform mat4 proj;
         void main(){
@@ -21,91 +21,91 @@
             gl_PointSize = 40.0;
         }`;
 
-    // 片元着色器
-    var fragmentString = `
+  // 片元着色器
+  const fragmentString = `
         void main(){
             gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
         }`;
 
-    function init() {
-        initWebGL();
-        initShader();
-        initBuffer();
-    }
+  function init() {
+    initWebGL();
+    initShader();
+    initBuffer();
+  }
 
 
-    function initWebGL() {
-        let webGLdiv = document.getElementById("webgl");
-        webGL = webGLdiv.getContext("webgl");
-        webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight)
-        mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4)
-    }
+  function initWebGL() {
+    let webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+    mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4);
+  }
 
-    function initShader() {
-        // 创建着色器对象（顶点、片元）
-        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
-        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
 
-        // 绑定着色器源代码
-        webGL.shaderSource(vsShader, vertexString);
-        webGL.shaderSource(fsShader, fragmentString);
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
 
-        // 编译着色器对象
-        webGL.compileShader(vsShader);
-        webGL.compileShader(fsShader);
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
 
-        // 创建程序对象和shader对象进行绑定
-        program = webGL.createProgram();
-        webGL.attachShader(program, vsShader);
-        webGL.attachShader(program, fsShader);
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
 
-        // webGL和项目中间进行绑定和使用
-        webGL.linkProgram(program);
-        webGL.useProgram(program);
-    }
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
 
-    function initBuffer() {
-        // 创建一个x=100,y=100到x=200,y=200的线
-        let fivePointArray = [
-            0, 0.5, 0, 1,
-            0.17, 0.17, 0, 1,
-            0.5, 0, 0, 1,
-            0.17, -0.17, 0, 1,
-            0.33, -0.67, 0, 1,
+  function initBuffer() {
+    // 创建一个x=100,y=100到x=200,y=200的线
+    let fivePointArray = [
+      0, 0.5, 0, 1,
+      0.17, 0.17, 0, 1,
+      0.5, 0, 0, 1,
+      0.17, -0.17, 0, 1,
+      0.33, -0.67, 0, 1,
 
-            0, -0.33, 0, 1,
-            -0.33, -0.67, 0, 1,
-            -0.17, -0.17, 0, 1,
-            -0.5, 0, 0, 1,
-            -0.17, 0.17, 0, 1,
-        ]
+      0, -0.33, 0, 1,
+      -0.33, -0.67, 0, 1,
+      -0.17, -0.17, 0, 1,
+      -0.5, 0, 0, 1,
+      -0.17, 0.17, 0, 1
+    ];
 
-        let fivePointPosition = new Float32Array(fivePointArray);
-        let aPosition = webGL.getAttribLocation(program, "a_position");
+    let fivePointPosition = new Float32Array(fivePointArray);
+    let aPosition = webGL.getAttribLocation(program, 'a_position');
 
-        let fivePointBuffer = webGL.createBuffer()
-        webGL.bindBuffer(webGL.ARRAY_BUFFER, fivePointBuffer)
-        webGL.bufferData(webGL.ARRAY_BUFFER, fivePointPosition, webGL.STATIC_DRAW)
-        webGL.enableVertexAttribArray(aPosition)
-        webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0 * 4)
+    let fivePointBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, fivePointBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, fivePointPosition, webGL.STATIC_DRAW);
+    webGL.enableVertexAttribArray(aPosition);
+    webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0);
 
-        let uniformProj = webGL.getUniformLocation(program, "proj");
-        webGL.uniformMatrix4fv(uniformProj, false, projMat4)
+    let uniformProj = webGL.getUniformLocation(program, 'proj');
+    webGL.uniformMatrix4fv(uniformProj, false, projMat4);
 
-        draw(fivePointArray.length / 4)
-    }
+    draw(fivePointArray.length / 4);
+  }
 
-    function draw(size) {
-        webGL.clearColor(0, 0, 0, 1)
-        webGL.clear(webGL.COLOR_BUFFER_BIT)
-        webGL.drawArrays(webGL.LINE_LOOP, 0, size)
-    }
+  function draw(size) {
+    webGL.clearColor(0, 0, 0, 1);
+    webGL.clear(webGL.COLOR_BUFFER_BIT);
+    webGL.drawArrays(webGL.LINE_LOOP, 0, size);
+  }
 
 </script>
 
 
 <body onload="init()">
-    <canvas id="webgl" width="500" height="500" />
+<canvas id="webgl" width="500" height="500"/>
 </body>
 
 </html>
