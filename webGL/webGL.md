@@ -2,7 +2,9 @@
 
 > 其中，教程来自于 bilibili【2022 年 WebGL 入门教程（完结）】 https://www.bilibili.com/video/BV1Kb4y1x72q/?p=4&share_source=copy_web&vd_source=41d2dced76db87052ab1d8a28194bd8f
 
-> github 仓库地址：https://github.com/lizuoqun/visualThree/tree/main/webGL
+> 仓库地址：
+> github https://github.com/lizuoqun/visualThree/tree/main/webGL
+> gitee https://gitee.com/modify_lzq/visualThree
 
 # webGL 概述及点绘制
 
