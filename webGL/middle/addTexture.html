@@ -14,9 +14,10 @@
   // 顶点着色器
   let vertexString = `
         attribute vec4 a_position;
+        attribute float size;
         void main(){
             gl_Position = a_position;
-            gl_PointSize = 64.0;
+            gl_PointSize = size;
         }`;
 
   // 片元着色器
@@ -82,16 +83,23 @@
     let pointPosition = new Float32Array(POINTS);
 
     let pointBuffer = webGL.createBuffer();
-
     webGL.bindBuffer(webGL.ARRAY_BUFFER, pointBuffer);
-
     webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
-
     webGL.enableVertexAttribArray(aPosition);
-
     webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0);
 
-    webGL.vertexAttrib4fv(aPosition, pointPosition);
+    // 利用attribute 传值
+    const sizeArray = new Float32Array([60, 100, 80, 30]);
+    let sizeBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, sizeBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, sizeArray, webGL.STATIC_DRAW);
+    let aSize = webGL.getAttribLocation(program, 'size');
+    webGL.vertexAttribPointer(aSize, 1, webGL.FLOAT, false, 4, 0);
+    webGL.enableVertexAttribArray(aSize);
+
+    // 利用uniform 传值
+    // let uSize = webGL.getUniformLocation(program, 'size');
+    // webGL.uniform1f(uSize, Math.random() * 100);
 
     uTexture = webGL.getUniformLocation(program, 'texture');
     webGL.enable(webGL.BLEND);
