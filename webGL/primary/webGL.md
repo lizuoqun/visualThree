@@ -108,9 +108,10 @@ graph LR
 这里还引入了一个 glMatrix.js（用于高性能 WebGL 应用程序的 JavaScript 矩阵和矢量库）[官网在这，这个 JS 可以在这下载](https://glmatrix.net/)。
 
 ```html
-<script src="./glMatrix-0.9.6.min.js"></script>
+
+<script src="../assets/js/glMatrix-0.9.6.min.js"></script>
 <body onload="init()">
-  <canvas id="webgl" width="1024" height="768" />
+<canvas id="webgl" width="1024" height="768"/>
 </body>
 ```
 

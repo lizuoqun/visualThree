@@ -4,132 +4,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebGL 绘制纹理效果</title>
-    <script src="./glMatrix-0.9.6.min.js"></script>
+    <title>WebGL 绘制多重纹理效果</title>
+    <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
 </head>
 <script>
-    var webGL;
-    var program
-
-    // 顶点着色器
-    var vertexString = `
+  let webGL;
+  let program;
+  var projMat4 = mat4.create();
+  // 顶点着色器
+  let vertexString = `
         attribute vec4 a_position;
+        uniform mat4 proj;
+        attribute vec2 outUV;
+        varying vec2 inUV;
         void main(){
-            gl_Position = a_position;
-            gl_PointSize = 64.0;
+            gl_Position = proj * a_position;
+            inUV = outUV;
         }`;
 
-    // 片元着色器
-    var fragmentString = `
+  // 片元着色器
+  let fragmentString = `
         precision mediump float;
-        uniform sampler2D texture;
-        void main(){
-            vec4 color = texture2D(texture, gl_PointCoord);
-            if(color.a < 0.1){
-                discard;
-            }
-            gl_FragColor = color;
+        uniform sampler2D texture1;
+        uniform sampler2D texture2;
+        uniform float anim;
+        varying vec2 inUV;
+        void main(void){
+          vec4 color1 =texture2D(texture1,inUV);
+          vec4 color2 =texture2D(texture2, vec2(inUV.x + anim, inUV.y));
+          gl_FragColor = color1 + color2 ;
         }`;
 
-    function init() {
-        initWebGL();
-        initShader();
-        initBuffer();
-        draw();
-    }
+  function init() {
+    initWebGL();
+    initShader();
+    initBuffer();
+    tick();
+  }
+
+  function tick() {
+    requestAnimationFrame(tick);
+    draw();
+  };
+
+  function initWebGL() {
+    let webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+    mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4);
+  }
+
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
+
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
+
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
+
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
 
 
-    function initWebGL() {
-        let webGLdiv = document.getElementById("webgl");
-        webGL = webGLdiv.getContext("webgl");
-        webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight)
-    }
+  const POINTS = [
+    0, 0, 0, 1, 0, 0,
+    0, 500, 0, 1, 0, 1,
+    500, 0, 0, 1, 1, 0,
 
-    function initShader() {
-        // 创建着色器对象（顶点、片元）
-        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
-        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+    500, 0, 0, 1, 1, 0,
+    0, 500, 0, 1, 0, 1,
+    500, 500, 0, 1, 1, 1
+  ];
+  let uTexture1;
+  let uTexture2;
+  let texture1;
+  let texture2;
+  let uniformAnim = 0;
 
-        // 绑定着色器源代码
-        webGL.shaderSource(vsShader, vertexString);
-        webGL.shaderSource(fsShader, fragmentString);
+  let count = 0;
 
-        // 编译着色器对象
-        webGL.compileShader(vsShader);
-        webGL.compileShader(fsShader);
+  function initBuffer() {
+    let aPosition = webGL.getAttribLocation(program, 'a_position');
+    let pointPosition = new Float32Array(POINTS);
 
-        // 创建程序对象和shader对象进行绑定
-        program = webGL.createProgram();
-        webGL.attachShader(program, vsShader);
-        webGL.attachShader(program, fsShader);
+    let pointBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, pointBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
 
-        // webGL和项目中间进行绑定和使用
-        webGL.linkProgram(program);
-        webGL.useProgram(program);
-    }
+    webGL.enableVertexAttribArray(aPosition);
+    webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 6 * 4, 0);
+    webGL.vertexAttrib4fv(aPosition, pointPosition);
 
 
-    const POINTS = [
-        0.1, 0.3, 0, 1,
-        -0.1, 0.3, 0, 1,
-        0.2, 0.3, 0, 1,
-        0.1, -0.3, 0, 1
-    ]
-    let uTexture;
-    function initBuffer() {
-        let aPosition = webGL.getAttribLocation(program, "a_position");
-        let pointPosition = new Float32Array(POINTS);
+    let uniformProj = webGL.getUniformLocation(program, 'proj');
+    webGL.uniformMatrix4fv(uniformProj, false, projMat4);
 
-        let pointBuffer = webGL.createBuffer()
+    let attribOutUV = webGL.getAttribLocation(program, 'outUV');
+    webGL.enableVertexAttribArray(attribOutUV);
+    webGL.vertexAttribPointer(attribOutUV, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
 
-        webGL.bindBuffer(webGL.ARRAY_BUFFER, pointBuffer)
 
-        webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW)
+    uTexture1 = webGL.getUniformLocation(program, 'texture1');
+    uTexture2 = webGL.getUniformLocation(program, 'texture2');
 
-        webGL.enableVertexAttribArray(aPosition)
+    texture1 = initTexture('../assets/image/fog.png');
+    texture2 = initTexture('../assets/image/山水.png');
+  }
 
-        webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0 * 4)
+  function initTexture(imageSrc) {
+    let textureHandle = webGL.createTexture();
+    textureHandle.image = new Image();
+    textureHandle.image.src = imageSrc;
+    textureHandle.image.onload = () => {
+      handleLoadedTexture(textureHandle);
+    };
 
-        webGL.vertexAttrib4fv(aPosition, pointPosition)
+    return textureHandle;
+  }
 
-        uTexture = webGL.getUniformLocation(program, "texture");
-        webGL.enable(webGL.BLEND)
-        webGL.blendFunc(webGL.SRC_ALPHA, webGL.ONE_MINUS_SRC_ALPHA)
+  function handleLoadedTexture(texture) {
+    webGL.bindTexture(webGL.TEXTURE_2D, texture);
+    webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.NEAREST);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.NEAREST);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.REPEAT);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_T, webGL.REPEAT);
+  }
 
-        initTexture()
-    }
+  function draw() {
+    webGL.clearColor(0.0, 1.0, 0.0, 1.0);
+    webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
+    webGL.enable(webGL.DEPTH_TEST);
 
-    function initTexture() {
-        let textureHandle = webGL.createTexture();
-        textureHandle.image = new Image();
-        textureHandle.image.src = "./point64.png"
-        textureHandle.image.onload = () => {
-            handleLoadedTexture(textureHandle)
-        }
-    }
 
-    function handleLoadedTexture(texture) {
-        webGL.bindTexture(webGL.TEXTURE_2D, texture);
-        webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
-        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.NEAREST);
-        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.NEAREST);
-        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.REPEAT);
-        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_T, webGL.REPEAT);
-        webGL.uniform1i(uTexture, 0);
-        draw()
-    }
+    //纹理变动
+    uniformAnim = webGL.getUniformLocation(program, 'anim');
+    count = count + 0.01;
+    webGL.uniform1f(uniformAnim, count);
+    webGL.activeTexture(webGL.TEXTURE0);
+    webGL.bindTexture(webGL.TEXTURE_2D, texture1);
+    webGL.uniform1i(uTexture1, 1);
 
-    function draw() {
-        webGL.clearColor(0, 0, 0, 1)
-        webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT)
-        webGL.drawArrays(webGL.POINTS, 0, POINTS.length)
-    }
+    webGL.activeTexture(webGL.TEXTURE1);
+    webGL.bindTexture(webGL.TEXTURE_2D, texture2);
+    webGL.uniform1i(uTexture2, 0);
+
+    webGL.drawArrays(webGL.TRIANGLES, 0, 6);
+  }
 
 </script>
 
 
 <body onload="init()">
-    <canvas id="webgl" width="1024" height="768" />
+<canvas id="webgl" width="1024" height="768"></canvas>
 </body>
 
 </html>

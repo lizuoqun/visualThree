@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebGL 绘制纹理效果</title>
-    <script src="./glMatrix-0.9.6.min.js"></script>
+    <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
 </head>
 <script>
   let webGL;
@@ -103,7 +103,7 @@
   function initTexture() {
     let textureHandle = webGL.createTexture();
     textureHandle.image = new Image();
-    textureHandle.image.src = './point64.png';
+    textureHandle.image.src = '../assets/image/point64.png';
     textureHandle.image.onload = () => {
       handleLoadedTexture(textureHandle);
     };
@@ -130,7 +130,7 @@
 
 
 <body onload="init()">
-<canvas id="webgl" width="1024" height="768"/>
+<canvas id="webgl" width="1024" height="768"></canvas>
 </body>
 
 </html>

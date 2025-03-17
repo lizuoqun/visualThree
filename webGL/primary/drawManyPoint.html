@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebGL动态绘制鼠标点击点</title>
-    <script src="./glMatrix-0.9.6.min.js"></script>
+    <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
 </head>
 <script>
   let webGL;
@@ -99,8 +99,8 @@
 
       webGL.vertexAttrib4fv(aPosition, pointPosition);
 
-      let uniformProj = webGL.getUniformLocation(program, 'proj');
-      webGL.uniformMatrix4fv(uniformProj, false, projMat4);
+      // let uniformProj = webGL.getUniformLocation(program, 'proj');
+      // webGL.uniformMatrix4fv(uniformProj, false, projMat4);
 
       draw();
     });
@@ -116,7 +116,7 @@
 
 
 <body onload="init()">
-<canvas id="webgl" width="1024" height="768"/>
+<canvas id="webgl" width="1024" height="768"></canvas>
 </body>
 
 </html>
