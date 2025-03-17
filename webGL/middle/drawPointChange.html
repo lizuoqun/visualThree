@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL绘制单个点（改变其中的大小、颜色）</title>
+    <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
+</head>
+<script>
+  let webGL;
+  const projMat4 = mat4.create();
+  let program;
+
+  // 顶点着色器
+  const vertexString = `
+        attribute vec4 a_position;
+        uniform mat4 proj;
+        attribute float size;
+        attribute vec4 a_color;
+        varying vec4 v_color;
+        void main(){
+            gl_Position = proj * a_position;
+            gl_PointSize = size;
+            v_color = a_color;
+        }`;
+
+  // 片元着色器
+  const fragmentString = `
+        void main(){
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }`;
+
+  function init() {
+    initWebGL();
+    initShader();
+    initBuffer();
+  }
+
+
+  function initWebGL() {
+    let webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+    mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4);
+  }
+
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
+
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
+
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
+
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
+
+  function initBuffer() {
+    const points = [
+      200, 200, 0, 1,
+      300, 300, 0, 1,
+      400, 100, 0, 1,
+      500, 300, 0, 1
+    ];
+    let pointPosition = new Float32Array(points);
+
+    let aPosition = webGL.getAttribLocation(program, 'a_position');
+    let pointBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, pointBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
+    webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0);
+    webGL.enableVertexAttribArray(aPosition);
+
+    let uniformProj = webGL.getUniformLocation(program, 'proj');
+    webGL.uniformMatrix4fv(uniformProj, false, projMat4);
+
+
+    // 利用attribute 传值
+    let aSize = webGL.getAttribLocation(program, 'size');
+    const sizeArray = new Float32Array([10, 100, 80, 30]);
+    let sizeBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, sizeBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, sizeArray, webGL.STATIC_DRAW);
+    webGL.vertexAttribPointer(aSize, 1, webGL.FLOAT, false, 4, 0);
+    webGL.enableVertexAttribArray(aSize);
+
+    const colorArray = new Float32Array([
+      1.0, 0.0, 0.0, 1.0,
+      0.0, 1.0, 0.0, 1.0,
+      0.0, 0.0, 1.0, 1.0,
+      1.0, 1.0, 0.0, 1.0
+    ]);
+    let aColor = webGL.getAttribLocation(program, 'a_color');
+    let colorBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, colorBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, colorArray, webGL.STATIC_DRAW);
+    webGL.vertexAttribPointer(aColor, 4, webGL.FLOAT, false, 4 * 4, 0);
+    webGL.enableVertexAttribArray(aColor);
+
+    draw(points.length / 4);
+  }
+
+  function draw(size) {
+    webGL.clearColor(0, 0, 0, 1);
+    webGL.clear(webGL.COLOR_BUFFER_BIT);
+    webGL.drawArrays(webGL.POINTS, 0, size);
+  }
+
+</script>
+
+
+<body onload="init()">
+<canvas id="webgl" width="1024" height="768"></canvas>
+</body>
+
+</html>
