@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebGL 绘制多重纹理效果</title>
+    <title>WebGL 绘制多重纹理效果（换成webGL当中的坐标）</title>
     <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
 </head>
 <script>
@@ -14,11 +14,10 @@
   // 顶点着色器
   let vertexString = `
         attribute vec4 a_position;
-        uniform mat4 proj;
         attribute vec2 outUV;
         varying vec2 inUV;
         void main(){
-            gl_Position = proj * a_position;
+            gl_Position = a_position;
             inUV = outUV;
         }`;
 
@@ -32,7 +31,7 @@
         void main(void){
           vec4 color1 =texture2D(texture1, inUV);
           vec4 color2 =texture2D(texture2, vec2(inUV.x + anim, inUV.y));
-          gl_FragColor = color1 + color2;
+          gl_FragColor = color1 ;
         }`;
 
   function init() {
@@ -74,13 +73,21 @@
 
 
   const POINTS = [
-    0, 0, 0, 1, 0, 0,
-    0, 500, 0, 1, 0, 1,
-    500, 0, 0, 1, 1, 0,
+    -0.5, -0.5, 0, 1, 0, 0,
+    -0.5, 0.5, 0, 1, 0, -1,
+    0.5, 0.5, 0, 1, 1, -1,
+    0.5, -0.5, 0, 1, 1, 0
 
-    500, 0, 0, 1, 1, 0,
-    0, 500, 0, 1, 0, 1,
-    500, 500, 0, 1, 1, 1
+
+    // -0.5, -0.5, 0, 1,      1, 1,
+    // -0.5, 0.5, 0, 1,       0, 1,
+    // 0.5, 0.5, 0, 1,        0, 0,
+    // 0.5, -0.5, 0, 1,       1, 0,
+
+  ];
+  let index = [
+    0, 1, 2,
+    2, 0, 3
   ];
   let uTexture1;
   let uTexture2;
@@ -97,19 +104,17 @@
     let pointBuffer = webGL.createBuffer();
     webGL.bindBuffer(webGL.ARRAY_BUFFER, pointBuffer);
     webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
-
     webGL.enableVertexAttribArray(aPosition);
     webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 6 * 4, 0);
-    webGL.vertexAttrib4fv(aPosition, pointPosition);
-
-
-    let uniformProj = webGL.getUniformLocation(program, 'proj');
-    webGL.uniformMatrix4fv(uniformProj, false, projMat4);
 
     let attribOutUV = webGL.getAttribLocation(program, 'outUV');
     webGL.enableVertexAttribArray(attribOutUV);
     webGL.vertexAttribPointer(attribOutUV, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
 
+    let indexArray = new Uint8Array(index);
+    let indexBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    webGL.bufferData(webGL.ELEMENT_ARRAY_BUFFER, indexArray, webGL.STATIC_DRAW);
 
     uTexture1 = webGL.getUniformLocation(program, 'texture1');
     uTexture2 = webGL.getUniformLocation(program, 'texture2');
@@ -155,7 +160,7 @@
     webGL.bindTexture(webGL.TEXTURE_2D, texture2);
     webGL.uniform1i(uTexture2, 1);
 
-    webGL.drawArrays(webGL.TRIANGLES, 0, 6);
+    webGL.drawElements(webGL.TRIANGLES, 6, webGL.UNSIGNED_BYTE, 0);
 
     requestAnimationFrame(draw);
   }
