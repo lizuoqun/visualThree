@@ -10,7 +10,7 @@
 <script>
   let webGL;
   let program;
-  var projMat4 = mat4.create();
+  const projMat4 = mat4.create();
   // 顶点着色器
   let vertexString = `
         attribute vec4 a_position;
@@ -39,13 +39,8 @@
     initWebGL();
     initShader();
     initBuffer();
-    tick();
-  }
-
-  function tick() {
-    requestAnimationFrame(tick);
     draw();
-  };
+  }
 
   function initWebGL() {
     let webGLdiv = document.getElementById('webgl');
@@ -148,8 +143,7 @@
     webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
     webGL.enable(webGL.DEPTH_TEST);
 
-
-    //纹理变动
+    // 纹理变动
     uniformAnim = webGL.getUniformLocation(program, 'anim');
     count = count + 0.01;
     webGL.uniform1f(uniformAnim, count);
@@ -162,6 +156,8 @@
     webGL.uniform1i(uTexture2, 0);
 
     webGL.drawArrays(webGL.TRIANGLES, 0, 6);
+
+    requestAnimationFrame(draw);
   }
 
 </script>
