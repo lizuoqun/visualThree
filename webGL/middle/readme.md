@@ -130,6 +130,13 @@ precision：用于声明着色器中浮点数或整数的计算精度
 
 ## 渐变三角形
 
+在顶点着色器和片元着色器之间还有两个步骤
+
+- 图形装配过程：将孤立的顶点坐标装配成几何图形。几何图形 的类别由gl.drawArrays()函数的第一个参数决定
+- 光栅化：装配好的几何图形转化为片元
+
+在光栅化过程生成的片元都是带有坐标信息的，调用片元着色器时这些坐标信息也随着片元传了进去，我们可以通过片元着色器中的内置变量来访问片元的坐标
+
 在前面已经有一个创建三角形的案例，然后也知道怎么把颜色赋值进去了，修改片元着色器
 
 > vec4 gl_FragCoord 该内置变量的第1个和第2个分量表示片元在<canvas>坐标系统（窗口坐标系统）中的坐标值
@@ -142,4 +149,14 @@ const fragmentString = `
   void main(){
     gl_FragColor = vec4(gl_FragCoord.x / u_width, 0.0, gl_FragCoord.y / u_height, 1.0);
   }`;
+```
+
+然后在js当中给片元着色器传递一个 u_width 和 u_height 的值，然后就可以得到一个渐变的三角形了（传递的值就是canvas的宽高）
+
+```js
+let uniformWidth = webGL.getUniformLocation(program, 'u_width');
+webGL.uniform1f(uniformWidth, 1024.0);
+
+let uniformHeight = webGL.getUniformLocation(program, 'u_height');
+webGL.uniform1f(uniformHeight, 768.0);
 ```
