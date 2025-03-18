@@ -71,7 +71,7 @@
 
 
   const POINTS = [
-    0.1, 0.3, 0, 1,
+    0.1, 0.7, 0, 1,
     -0.1, 0.3, 0, 1,
     0.2, 0.3, 0, 1,
     0.1, -0.3, 0, 1
@@ -89,7 +89,7 @@
     webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0);
 
     // 利用attribute 传值
-    const sizeArray = new Float32Array([60, 100, 80, 30]);
+    const sizeArray = new Float32Array([160, 80, 70, 30]);
     let sizeBuffer = webGL.createBuffer();
     webGL.bindBuffer(webGL.ARRAY_BUFFER, sizeBuffer);
     webGL.bufferData(webGL.ARRAY_BUFFER, sizeArray, webGL.STATIC_DRAW);
