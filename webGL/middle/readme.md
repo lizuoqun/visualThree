@@ -127,3 +127,19 @@ precision：用于声明着色器中浮点数或整数的计算精度
 | highp   | 低   | 需要高精度的计算（如复杂光照、抗锯齿） | 移动设备可能不支持或性能差        |
 | mediump | 中   | 大多数颜色计算（纹理采样、颜色混合）  | 极小数（如 < 0.0001）可能被截断 |
 | lowp    | 高   | 简单颜色计算（如纯色、低精度渐变）   | 颜色过渡可能出现断层           |
+
+## 渐变三角形
+
+在前面已经有一个创建三角形的案例，然后也知道怎么把颜色赋值进去了，修改片元着色器
+
+> vec4 gl_FragCoord 该内置变量的第1个和第2个分量表示片元在<canvas>坐标系统（窗口坐标系统）中的坐标值
+
+```js
+const fragmentString = `
+  precision mediump float;
+  uniform float u_width;
+  uniform float u_height;
+  void main(){
+    gl_FragColor = vec4(gl_FragCoord.x / u_width, 0.0, gl_FragCoord.y / u_height, 1.0);
+  }`;
+```

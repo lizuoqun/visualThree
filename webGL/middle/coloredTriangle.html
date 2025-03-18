@@ -21,10 +21,16 @@
             gl_PointSize = 40.0;
         }`;
 
+  // vec4 gl_FragCoord 该内置变量的第1个和第2个分量表示片元在<canvas>坐标系统（窗口坐标系统）中的坐标值
+
+
   // 片元着色器
   const fragmentString = `
+        precision mediump float;
+        uniform float u_width;
+        uniform float u_height;
         void main(){
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            gl_FragColor = vec4(gl_FragCoord.x / u_width, 0.0, gl_FragCoord.y / u_height, 1.0);
         }`;
 
   function init() {
@@ -54,6 +60,17 @@
     webGL.compileShader(vsShader);
     webGL.compileShader(fsShader);
 
+    if (!webGL.getShaderParameter(vsShader, webGL.COMPILE_STATUS)) {
+      const err = webGL.getShaderInfoLog(vsShader);
+      console.log('顶点 =====', err);
+      return;
+    }
+    if (!webGL.getShaderParameter(fsShader, webGL.COMPILE_STATUS)) {
+      const err = webGL.getShaderInfoLog(fsShader);
+      console.log('片元 =====', err);
+      return;
+    }
+
     // 创建程序对象和shader对象进行绑定
     program = webGL.createProgram();
     webGL.attachShader(program, vsShader);
@@ -82,6 +99,13 @@
 
     let uniformProj = webGL.getUniformLocation(program, 'proj');
     webGL.uniformMatrix4fv(uniformProj, false, projMat4);
+
+
+    let uniformWidth = webGL.getUniformLocation(program, 'u_width');
+    webGL.uniform1f(uniformWidth, 1024.0);
+
+    let uniformHeight = webGL.getUniformLocation(program, 'u_height');
+    webGL.uniform1f(uniformHeight, 768.0);
 
     draw(triangleArray.length / 4);
   }
