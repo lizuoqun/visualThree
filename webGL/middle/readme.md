@@ -21,11 +21,13 @@ let vertexString = `
 
 利用 attribute 传递变量需要以下五个步骤、
 
-- 创建缓冲区对象
-- 绑定 buffer
-- 将数据写入到缓冲区对象
-- 将缓冲区对象分配给 attribute 变量
-- 开启 attribute 变量
+```mermaid
+graph LR
+创建缓冲区对象-->绑定Buffer
+绑定Buffer --> 将数据写入到缓冲区对象
+将数据写入到缓冲区对象-->将缓冲区对象分配给attribute变量
+将缓冲区对象分配给attribute变量-->开启attribute变量
+```
 
 而同时使用 uniform 传递变量就可以直接获取进行赋值效果是一样的，都可以把值传递进去（但是这里 uniform
 传值设置的是随机数，但是设置的所有顶点的值都是同一个）
