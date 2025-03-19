@@ -224,8 +224,8 @@ let fragmentString = `
 在通用方法 initBuffer 当中添加，其中 uTexture 作为全局变量需要提前定义。
 
 - enable(webGL.BLEND)：激活片元的颜色融合计算
--
-blendFunc() [参数说明如下：参数可选见 API](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/blendFunc#%E5%B8%B8%E9%87%8F)
+- blendFunc()
+  定义了一个用于混合像素算法的函数 [参数说明如下：参数可选见 API](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/blendFunc#%E5%B8%B8%E9%87%8F)
     - @param 为源混合因子指定一个乘数。默认值是 `gl.ONE`
     - @param 为源目标合因子指定一个乘数。默认值是 `gl.ZERO`
     - SRC_ALPHA：将所有颜色乘以源 alpha 值

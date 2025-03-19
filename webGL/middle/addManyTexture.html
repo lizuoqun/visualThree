@@ -147,6 +147,7 @@
     uniformAnim = webGL.getUniformLocation(program, 'anim');
     count = count + 0.01;
     webGL.uniform1f(uniformAnim, count);
+
     webGL.activeTexture(webGL.TEXTURE0);
     webGL.bindTexture(webGL.TEXTURE_2D, texture1);
     webGL.uniform1i(uTexture1, 0);
