@@ -51,6 +51,7 @@ webGL.enableVertexAttribArray(aSize);
 let uSize = webGL.getUniformLocation(program, "size2");
 webGL.uniform1f(uSize, Math.random() * 100);
 ```
+<image src='../assets/image/send.png'/>
 
 ### 拓展 attribute 和 uniform 的使用
 
@@ -114,9 +115,10 @@ const fragmentString = `
 > 注：报错：<span style="color:red">ERROR: 0:2: '' : No precision specified for (float)</span>
 >
 > 原因是：片元着色器中未声明浮点型（float）变量的默认精度。GLSL ES 规范要求片元着色器必须显式定义浮点类型的精度，否则编译器会报错
-> ‌
 >
 > 解决：在片元着色器中声明精度，如：precision mediump float;
+
+<image src='../assets/image/send.png'/>
 
 ### 拓展 precision mediump float
 
@@ -176,6 +178,8 @@ let uniformHeight = webGL.getUniformLocation(program, "u_height");
 webGL.uniform1f(uniformHeight, 768.0);
 ```
 
+<image src='../assets/image/send.png'/>
+
 ### 补充：片元着色器的内置变量
 
 |       **变量名**        |  **类型/结构**   | **读写权限** |                    **含义与用途**                    |                           **注意事项**                            |
@@ -204,7 +208,7 @@ webGL.uniform1f(uniformHeight, 768.0);
 - 加载纹理图形，对其进行配置，以便使用
 - 在片元着色器中将相应的纹素从纹理中抽取出来，并将纹素的颜色赋给片元
 
-### 单层纹理贴图
+### 点精灵贴图
 
 在前面例子的基础上进行调整，先添加纹理到片元着色器中，
 
@@ -319,5 +323,95 @@ function handleLoadedTexture(texture) {
 | **MIRRORED_REPEAT** |    纹理以镜像的方式重复     | 每次重复都会翻转方向，减少割裂感 | 自然平铺效果，如地板、水面等 |
 
 使用LINEAR和NEAREST的区别【锯齿效果对比】
+<image src='../assets/image/send.png'/>
 
-### 多重纹理
+### 单纹理贴图
+
+上一步说明了怎么给点添加纹理，这一步就是给平面来添加纹理贴图。首先来个案例，绘制一个正方形，这个正方形就是到时候要贴图的块，拿两个三角形给他拼接成一个正方形，他的坐标就是这样：这里不管你是用的webGL原本-1到1的坐标系，还是转换成canvas的坐标系，后续只要修改triangleSize变量即可
+
+```js
+  const triangleSize = 500;
+
+let triangleArray = [
+  0, 0, 0, 1.0, 0, 0,
+  0, triangleSize, 0, 1.0, 0, 1,
+  triangleSize, 0, 0, 1.0, 1, 0,
+
+  triangleSize, 0, 0, 1.0, 1, 0,
+  0, triangleSize, 0, 1.0, 0, 1,
+  triangleSize, triangleSize, 0, 1.0, 1, 1
+];
+```
+
+其他的代码我就不一一贴在这了，可以参考上一篇文章绘制三角形的代码 [WebGL初体验：绘制图形与变换技巧](https://blog.csdn.net/qq_44973159/article/details/146249029)
+
+之后就是添加纹理了，修改顶点着色器和片元着色器的代码，也就是下面这个，好，现在心想那他不就是和上一步的点精灵纹理一样嘛？那我就按照这样的步骤去实现，最后会发现纹理贴图并不会贴上来，取而代之的反而是一片纯色，因为纹理贴图没有被正确绘制，所以就出现了问题。
+
+```js
+  // 顶点着色器
+let vertexString = `
+        attribute vec4 a_position;
+        uniform mat4 proj;
+        void main(){
+            gl_Position = proj * a_position;
+        }`;
+
+// 片元着色器
+let fragmentString = `
+        precision mediump float;
+        uniform sampler2D texture;
+        void main(){
+            vec4 color = texture2D(texture, gl_PointCoord);
+            gl_FragColor = color;
+        }`;
+```
+
+那这个着色的代码就不对，需要修改一下，要指定纹理的坐标，纹理坐标是会变化的，所以还是先通过attribute传递给顶点着色器，在通过varying传给片元着色器，并且在片元着色器当中texture2D的第二个参数设置为传递来的纹理坐标
+
+```js
+  // 顶点着色器
+let vertexString = `
+        attribute vec4 a_position;
+        attribute vec2 a_texture_coord;
+        varying vec2 v_texture_coord;
+        uniform mat4 proj;
+        void main(){
+            gl_Position = proj * a_position;
+            v_texture_coord = a_texture_coord;
+        }`;
+
+// 片元着色器
+let fragmentString = `
+        precision mediump float;
+        uniform sampler2D texture;
+        varying vec2 v_texture_coord;
+        void main(){
+            vec4 color = texture2D(texture, v_texture_coord);
+            gl_FragColor = color;
+        }`;
+```
+
+调整坐标，每一行都是一个点的位置，其中六个坐标分别代表x，y，z，纹理坐标u，v，其中u和v的范围是0~1，所以需要把x，y，z坐标除以纹理大小，得到纹理坐标
+
+```js
+  let triangleArray = [
+  0, 0, 0, 1.0, 0, 0,
+  0, triangleSize, 0, 1.0, 0, 1,
+  triangleSize, 0, 0, 1.0, 1, 0,
+
+  triangleSize, 0, 0, 1.0, 1, 0,
+  0, triangleSize, 0, 1.0, 0, 1,
+  triangleSize, triangleSize, 0, 1.0, 1, 1
+];
+```
+
+然后就是参数传递，这里的参数传递不同的就是每个参数都要跳过4个，因为这里的顶点着色器传递的顶点坐标是vec4，所以要跳过4个
+
+```js
+let aTexCoord = webGL.getAttribLocation(program, 'a_texture_coord');
+webGL.enableVertexAttribArray(aTexCoord);
+webGL.vertexAttribPointer(aTexCoord, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
+```
+
+最后加载图片绘制纹理就是相同的代码了，这里看一下效果
+<image src='../assets/image/send.png'/>
