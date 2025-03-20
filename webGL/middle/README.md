@@ -8,13 +8,13 @@
 
 ```js
 let vertexString = `
-    attribute vec4 a_position;
-    attribute float size1;
-    uniform float size2;
-    void main(){
-      gl_Position = a_position;
-      gl_PointSize = size1;
-    }`;
+  attribute vec4 a_position;
+  attribute float size1;
+  uniform float size2;
+  void main(){
+    gl_Position = a_position;
+    gl_PointSize = size1;
+  }`;
 ```
 
 这里可以用 attribute 和 uniform 定义大小的值，然后传递给顶点着色器，那么对应他的 js 赋值的代码如下：
@@ -29,9 +29,9 @@ graph LR
     将缓冲区对象分配给attribute变量 --> 开启attribute变量
 ```
 
-> 如果你用的web storm或者idea来写md，发现mermaid预览不了，可以在插件plugin里面搜索mermaid进行安装
+> 如果你用的 web storm 或者 idea 来写 md，发现 mermaid 预览不了，可以在插件 plugin 里面搜索 mermaid 进行安装
 >
-> 如果是vscode，可以安装插件：Markdown Preview Mermaid Support
+> 如果是 vscode，可以安装插件：Markdown Preview Mermaid Support
 
 而同时使用 uniform 传递变量就可以直接获取进行赋值效果是一样的，都可以把值传递进去（但是这里 uniform
 传值设置的是随机数，但是设置的所有顶点的值都是同一个）
@@ -52,17 +52,17 @@ let uSize = webGL.getUniformLocation(program, "size2");
 webGL.uniform1f(uSize, Math.random() * 100);
 ```
 
-<image src='../assets/image/send.png'/>
+<image src='../assets/image/send.png' style="width:400px;height:400px"/>
 
 ### 拓展 attribute 和 uniform 的使用
 
-| 特性    | attribute                   | uniform            |
-|-------|-----------------------------|--------------------|
-| 作用范围  | 逐顶点（每个顶点不同）                 | 全局（所有顶点共享）         |
-| 数据来源  | 顶点缓冲区（如顶点坐标数组）              | 直接通过 JavaScript 设置 |
-| 更新频率  | 每个顶点处理时更新                   | 一次绘制调用中保持不变        |
-| 典型用途  | 顶点位置、颜色、纹理坐标                | 变换矩阵、全局参数          |
-| WebGL | 设置方法 gl.vertexAttribPointer | gl.uniform\* 系列函数  |
+| 特性     | attribute                       | uniform                  |
+| -------- | ------------------------------- | ------------------------ |
+| 作用范围 | 逐顶点（每个顶点不同）          | 全局（所有顶点共享）     |
+| 数据来源 | 顶点缓冲区（如顶点坐标数组）    | 直接通过 JavaScript 设置 |
+| 更新频率 | 每个顶点处理时更新              | 一次绘制调用中保持不变   |
+| 典型用途 | 顶点位置、颜色、纹理坐标        | 变换矩阵、全局参数       |
+| WebGL    | 设置方法 gl.vertexAttribPointer | gl.uniform\* 系列函数    |
 
 如何选择？
 
@@ -94,23 +94,23 @@ a_color 给到 v_color，
 ```js
 // 顶点着色器
 const vertexString = `
-    attribute vec4 a_position;
-    uniform mat4 proj;
-    attribute float size;
-    attribute vec4 a_color;
-    varying vec4 v_color;
-    void main(){
-        gl_Position = proj * a_position;
-        gl_PointSize = size;
-        v_color = a_color;
-    }`;
+  attribute vec4 a_position;
+  uniform mat4 proj;
+  attribute float size;
+  attribute vec4 a_color;
+  varying vec4 v_color;
+  void main(){
+    gl_Position = proj * a_position;
+    gl_PointSize = size;
+    v_color = a_color;
+  }`;
 
 // 片元着色器
 const fragmentString = `
-    varying vec4 v_color;
-    void main(){
-        gl_FragColor = v_color;
-    }`;
+  varying vec4 v_color;
+  void main(){
+    gl_FragColor = v_color;
+  }`;
 ```
 
 > 注：报错：<span style="color:red">ERROR: 0:2: '' : No precision specified for (float)</span>
@@ -119,7 +119,7 @@ const fragmentString = `
 >
 > 解决：在片元着色器中声明精度，如：precision mediump float;
 
-<image src='../assets/image/send.png'/>
+<image src='../assets/image/send.png' style="width:400px;height:400px"/>
 
 ### 拓展 precision mediump float
 
@@ -132,12 +132,12 @@ precision：用于声明着色器中浮点数或整数的计算精度
 
 **精度对性能和效果的影响**
 
-| 精度等级    | 性能 | 适用场景                | 典型问题                 |
-|---------|----|---------------------|----------------------|
-| float   | 高  | 一般计算（如颜色、阴影、纹理采样）   | 移动设备可能不支持或性能差        |
-| highp   | 低  | 需要高精度的计算（如复杂光照、抗锯齿） | 移动设备可能不支持或性能差        |
-| mediump | 中  | 大多数颜色计算（纹理采样、颜色混合）  | 极小数（如 < 0.0001）可能被截断 |
-| lowp    | 高  | 简单颜色计算（如纯色、低精度渐变）   | 颜色过渡可能出现断层           |
+|    精度等级    |   性能   |                   适用场景                   |               典型问题                |
+|:----------:|:------:|:----------------------------------------:|:---------------------------------:|
+|   float    |   高    |            一般计算（如颜色、阴影、纹理采样）             |           移动设备可能不支持或性能差           |
+|   highp    |   低    |           需要高精度的计算（如复杂光照、抗锯齿）            |           移动设备可能不支持或性能差           |
+|  mediump   |   中    |            大多数颜色计算（纹理采样、颜色混合）            |       极小数（如 < 0.0001）可能被截断        |
+|    lowp    |   高    |            简单颜色计算（如纯色、低精度渐变）             |            颜色过渡可能出现断层             |
 
 ### varying 变量的作用和内插过程
 
@@ -179,19 +179,19 @@ let uniformHeight = webGL.getUniformLocation(program, "u_height");
 webGL.uniform1f(uniformHeight, 768.0);
 ```
 
-<image src='../assets/image/send.png'/>
+<image src='../assets/image/send.png' style="width:400px;height:400px"/>
 
 ### 补充：片元着色器的内置变量
 
-|       **变量名**        |  **类型/结构**   | **读写权限** |                    **含义与用途**                    |                           **注意事项**                            |
-|:--------------------:|:------------:|:--------:|:-----------------------------------------------:|:-------------------------------------------------------------:|
-|  **gl\_FragCoord**   |     vec4     |    只读    |    片元在屏幕空间的位置（x,y 原点在视口左下角，z 深度值，w 透视校正的倒数）     |                   与 Canvas 坐标系不同，常用于屏幕空间特效                    |
-| **gl\_FrontFacing**  |     bool     |    只读    |        判断片元是否属于图元正面（true 为正面，false 为背面）         |                       用于双面材质（如正反面不同颜色）                        |
-|  **gl\_FragColor**   |     vec4     |    只写    |                  片元的最终颜色（RGBA）                  |          WebGL 2\.0 已废弃，改用 out 变量（如 out vec4 color;）          |
-|   **gl\_FragData**   |   vec4\[\]   |    只写    |           多渲染目标（MRT）时，输出到不同颜色附件的颜色数组            | WebGL 1\.0 支持有限，WebGL 2\.0 需通过 layout\(location=N\) 指定自定义输出变量 |
-|  **gl\_PointCoord**  |     vec2     |    只读    | 绘制 GL\_POINTS 时，片元在点精灵内的纹理坐标（范围 \[0\.0, 1\.0\]） |                    原点在点精灵左下角，用于粒子效果或纹理贴图的点                    |
-|  **gl\_DepthRange**  |    struct    |    只读    |        深度缓冲区参数（包含 near, far, diff 三个字段）         |                    通常由 GPU 自动处理，手动计算深度时参考                     |
-| **gl\_LastFragData** | vec4\[\]（扩展） |    只读    |              保留前一次渲染的片元颜色数据（需启用扩展）              |                用于高级混合或延迟渲染技术，仅限 WebGL 2\.0 扩展                 |
+|     **变量名**      |  **类型/结构**   | **读写权限** |                              **含义与用途**                              |                                  **注意事项**                                  |
+| :-----------------: | :--------------: | :----------: | :----------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
+|  **gl_FragCoord**   |       vec4       |     只读     | 片元在屏幕空间的位置（x,y 原点在视口左下角，z 深度值，w 透视校正的倒数） |                    与 Canvas 坐标系不同，常用于屏幕空间特效                    |
+| **gl_FrontFacing**  |       bool       |     只读     |          判断片元是否属于图元正面（true 为正面，false 为背面）           |                        用于双面材质（如正反面不同颜色）                        |
+|  **gl_FragColor**   |       vec4       |     只写     |                          片元的最终颜色（RGBA）                          |             WebGL 2\.0 已废弃，改用 out 变量（如 out vec4 color;）             |
+|   **gl_FragData**   |     vec4\[\]     |     只写     |            多渲染目标（MRT）时，输出到不同颜色附件的颜色数组             | WebGL 1\.0 支持有限，WebGL 2\.0 需通过 layout\(location=N\) 指定自定义输出变量 |
+|  **gl_PointCoord**  |       vec2       |     只读     |    绘制 GL_POINTS 时，片元在点精灵内的纹理坐标（范围 \[0\.0, 1\.0\]）    |                 原点在点精灵左下角，用于粒子效果或纹理贴图的点                 |
+|  **gl_DepthRange**  |      struct      |     只读     |             深度缓冲区参数（包含 near, far, diff 三个字段）              |                    通常由 GPU 自动处理，手动计算深度时参考                     |
+| **gl_LastFragData** | vec4\[\]（扩展） |     只读     |                保留前一次渲染的片元颜色数据（需启用扩展）                |                用于高级混合或延迟渲染技术，仅限 WebGL 2\.0 扩展                |
 
 ## 纹理贴图
 
@@ -231,10 +231,10 @@ let fragmentString = `
 - enable(webGL.BLEND)：激活片元的颜色融合计算
 - blendFunc()
   定义了一个用于混合像素算法的函数 [参数说明如下：参数可选见 API](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/blendFunc#%E5%B8%B8%E9%87%8F)
-    - @param 为源混合因子指定一个乘数。默认值是 `gl.ONE`
-    - @param 为源目标合因子指定一个乘数。默认值是 `gl.ZERO`
-    - SRC_ALPHA：将所有颜色乘以源 alpha 值
-    - ONE_MINUS_SRC_ALPHA：将所有颜色乘以 1 减去源 alpha 值
+  - @param 为源混合因子指定一个乘数。默认值是 `gl.ONE`
+  - @param 为源目标合因子指定一个乘数。默认值是 `gl.ZERO`
+  - SRC_ALPHA：将所有颜色乘以源 alpha 值
+  - ONE_MINUS_SRC_ALPHA：将所有颜色乘以 1 减去源 alpha 值
 
 ```js
 uTexture = webGL.getUniformLocation(program, "texture");
@@ -253,7 +253,7 @@ initTexture();
 function initTexture() {
   let textureHandle = webGL.createTexture();
   textureHandle.image = new Image();
-  textureHandle.image.src = '../assets/image/point64.png';
+  textureHandle.image.src = "../assets/image/point64.png";
   textureHandle.image.onload = () => {
     handleLoadedTexture(textureHandle);
   };
@@ -263,28 +263,36 @@ function initTexture() {
 进行纹理贴图配置
 
 - bindTexture(target, texture) 将纹理对象绑定到目标上
-    - @param target
-        - TEXTURE_2D 二维纹理
-        - TEXTURE_CUBE_MAP 立方体映射纹理
-        - TEXTURE_3D 三维纹理
-        - TEXTURE_2D_ARRAY 二维数组纹理
+  - @param target
+    - TEXTURE_2D 二维纹理
+    - TEXTURE_CUBE_MAP 立方体映射纹理
+    - TEXTURE_3D 三维纹理
+    - TEXTURE_2D_ARRAY 二维数组纹理
 - texImage2D()
-  方法指定了二维纹理图像 [API详细说明...](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/texImage2D)
-    - @param target TEXTURE_2D 二维纹理
-    - @param level 指定详细级别。0 级是基本图像等级，n 级是第 n 个金字塔简化级
-    - @param 指定纹理中的颜色
-    - @param 和第三个参数保持一致
-    - @param type UNSIGNED_BYTE，RGBA每个通道 8 位
-    - @param pixels 纹理的像素源（image）
+  方法指定了二维纹理图像 [API 详细说明...](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/texImage2D)
+
+  - @param target TEXTURE_2D 二维纹理
+  - @param level 指定详细级别。0 级是基本图像等级，n 级是第 n 个金字塔简化级
+  - @param 指定纹理中的颜色
+  - @param 和第三个参数保持一致
+  - @param type UNSIGNED_BYTE，RGBA 每个通道 8 位
+  - @param pixels 纹理的像素源（image）
 
 - texParameteri(target, pname, param)
-  设置纹理参数 [API详细说明...](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/texParameter)
-    - @param target 同上bindTexture的target
+  设置纹理参数 [API 详细说明...](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/texParameter)
+  - @param target 同上 bindTexture 的 target
 
 ```js
 function handleLoadedTexture(texture) {
   webGL.bindTexture(webGL.TEXTURE_2D, texture);
-  webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
+  webGL.texImage2D(
+    webGL.TEXTURE_2D,
+    0,
+    webGL.RGBA,
+    webGL.RGBA,
+    webGL.UNSIGNED_BYTE,
+    texture.image
+  );
   webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.LINEAR);
   webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.LINEAR);
   webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.REPEAT);
@@ -295,131 +303,130 @@ function handleLoadedTexture(texture) {
 
 到这里就将图片作为纹理贴图渲染到目标上。
 
-其中texParameteri方法第二个参数为要设置的纹理参数
+其中 texParameteri 方法第二个参数为要设置的纹理参数
 
-| 名称                     | 描述       |
-|------------------------|----------|
-| **TEXTURE_MAG_FILTER** | 纹理放大滤波器  |
-| **TEXTURE_MIN_FILTER** | 纹理缩小滤波器  |
+| 名称                   | 描述             |
+| ---------------------- | ---------------- |
+| **TEXTURE_MAG_FILTER** | 纹理放大滤波器   |
+| **TEXTURE_MIN_FILTER** | 纹理缩小滤波器   |
 | **TEXTURE_WRAP_S**     | 纹理坐标水平填充 |
 | **TEXTURE_WRAP_T**     | 纹理坐标垂直填充 |
 
-第三个参数为展示的算法（先看TEXTURE_MAG_FILTER和TEXTURE_MIN_FILTER的取值）
+第三个参数为展示的算法（先看 TEXTURE_MAG_FILTER 和 TEXTURE_MIN_FILTER 的取值）
 
-|           **模式**           |   **描述**    |    **特点**     |   **适用场景**    |
-|:--------------------------:|:-----------:|:-------------:|:-------------:|
-|        **NEAREST**         |    最近邻过滤    |   性能高，锯齿明显    |  性能优先，画质要求低   |
-|         **LINEAR**         |    线性过滤     |   平滑，计算开销略高   |    需要平滑效果     |
-| **NEAREST_MIPMAP_NEAREST** | 最近邻mipmap过滤 |   性能高，锯齿或模糊   | 性能优先，mipmap支持 |
-| **LINEAR_MIPMAP_NEAREST**  | 线性mipmap过滤  |    平滑，性能适中    |    平衡性能和画质    |
-| **NEAREST_MIPMAP_LINEAR**  | 双线性mipmap过滤 |   更平滑，性能较好    |    平衡性能和画质    |
-|  **LINEAR_MIPMAP_LINEAR**  |    三线性过滤    | 最佳平滑效果，计算开销最高 |   对画质要求高的场景   |
+|          **模式**          |      **描述**      |          **特点**          |     **适用场景**      |
+| :------------------------: | :----------------: | :------------------------: | :-------------------: |
+|        **NEAREST**         |     最近邻过滤     |      性能高，锯齿明显      | 性能优先，画质要求低  |
+|         **LINEAR**         |      线性过滤      |     平滑，计算开销略高     |     需要平滑效果      |
+| **NEAREST_MIPMAP_NEAREST** | 最近邻 mipmap 过滤 |     性能高，锯齿或模糊     | 性能优先，mipmap 支持 |
+| **LINEAR_MIPMAP_NEAREST**  |  线性 mipmap 过滤  |       平滑，性能适中       |    平衡性能和画质     |
+| **NEAREST_MIPMAP_LINEAR**  | 双线性 mipmap 过滤 |      更平滑，性能较好      |    平衡性能和画质     |
+|  **LINEAR_MIPMAP_LINEAR**  |     三线性过滤     | 最佳平滑效果，计算开销最高 |  对画质要求高的场景   |
 
-而后是TEXTURE_WRAP_S和TEXTURE_WRAP_T的取值
+而后是 TEXTURE_WRAP_S 和 TEXTURE_WRAP_T 的取值
 
-|       **模式**        |      **描述**       |      **特点**      |    **适用场景**    |
-|:-------------------:|:-----------------:|:----------------:|:--------------:|
-|     **REPEAT**      |    纹理以平铺的方式重复     |   无缝拼接，适合重复图案    | 如砖墙、草地等需要重复的场景 |
-|  **CLAMP_TO_EDGE**  | 超出范围的坐标被截断到最近的边界值 |  边缘拉伸，无重复或镜像效果   |    单张图片或背景     |
-| **MIRRORED_REPEAT** |    纹理以镜像的方式重复     | 每次重复都会翻转方向，减少割裂感 | 自然平铺效果，如地板、水面等 |
+|      **模式**       |              **描述**              |             **特点**             |         **适用场景**         |
+| :-----------------: | :--------------------------------: | :------------------------------: | :--------------------------: |
+|     **REPEAT**      |        纹理以平铺的方式重复        |      无缝拼接，适合重复图案      | 如砖墙、草地等需要重复的场景 |
+|  **CLAMP_TO_EDGE**  | 超出范围的坐标被截断到最近的边界值 |    边缘拉伸，无重复或镜像效果    |        单张图片或背景        |
+| **MIRRORED_REPEAT** |        纹理以镜像的方式重复        | 每次重复都会翻转方向，减少割裂感 | 自然平铺效果，如地板、水面等 |
 
-使用LINEAR和NEAREST的区别【锯齿效果对比】
-<image src='../assets/image/send.png'/>
+使用 LINEAR 和 NEAREST 的区别【锯齿效果对比】
+<image src='../assets/image/send.png' style="width:400px;height:400px"/>
 
 ### 单纹理贴图
 
-上一步说明了怎么给点添加纹理，这一步就是给平面来添加纹理贴图。首先来个案例，绘制一个正方形，这个正方形就是到时候要贴图的块，拿两个三角形给他拼接成一个正方形，他的坐标就是这样：这里不管你是用的webGL原本-1到1的坐标系，还是转换成canvas的坐标系，后续只要修改triangleSize变量即可
+上一步说明了怎么给点添加纹理，这一步就是给平面来添加纹理贴图。首先来个案例，绘制一个正方形，这个正方形就是到时候要贴图的块，拿两个三角形给他拼接成一个正方形，他的坐标就是这样：这里不管你是用的 webGL 原本-1 到 1 的坐标系，还是转换成 canvas 的坐标系，后续只要修改 triangleSize 变量即可
 
 ```js
-  const triangleSize = 500;
+const triangleSize = 500;
 
-let triangleArray = [
-  0, 0, 0, 1.0, 0, 0,
-  0, triangleSize, 0, 1.0, 0, 1,
-  triangleSize, 0, 0, 1.0, 1, 0,
-
-  triangleSize, 0, 0, 1.0, 1, 0,
-  0, triangleSize, 0, 1.0, 0, 1,
-  triangleSize, triangleSize, 0, 1.0, 1, 1
-];
+// let triangleArray = [
+//   0, 0, 0, 1.0, 0, 0,
+//   0, triangleSize, 0, 1.0, 0, 1,
+//   triangleSize, 0, 0, 1.0, 1, 0,
+//   triangleSize, 0, 0, 1.0, 1, 0,
+//   0, triangleSize, 0, 1.0, 0, 1,
+//   triangleSize, triangleSize, 0, 1.0, 1, 1
+// ];
 ```
 
-其他的代码我就不一一贴在这了，可以参考上一篇文章绘制三角形的代码 [WebGL初体验：绘制图形与变换技巧](https://blog.csdn.net/qq_44973159/article/details/146249029)
+其他的代码我就不一一贴在这了，可以参考上一篇文章绘制三角形的代码 [WebGL 初体验：绘制图形与变换技巧](https://blog.csdn.net/qq_44973159/article/details/146249029)
 
 之后就是添加纹理了，修改顶点着色器和片元着色器的代码，也就是下面这个，好，现在心想那他不就是和上一步的点精灵纹理一样嘛？那我就按照这样的步骤去实现，最后会发现纹理贴图并不会贴上来，取而代之的反而是一片纯色，因为纹理贴图没有被正确绘制，所以就出现了问题。
 
 ```js
-  // 顶点着色器
+// 顶点着色器
 let vertexString = `
-        attribute vec4 a_position;
-        uniform mat4 proj;
-        void main(){
-            gl_Position = proj * a_position;
-        }`;
+  attribute vec4 a_position;
+  uniform mat4 proj;
+  void main(){
+    gl_Position = proj * a_position;
+}`;
 
 // 片元着色器
 let fragmentString = `
-        precision mediump float;
-        uniform sampler2D texture;
-        void main(){
-            vec4 color = texture2D(texture, gl_PointCoord);
-            gl_FragColor = color;
-        }`;
+  precision mediump float;
+  uniform sampler2D texture;
+  void main(){
+    vec4 color = texture2D(texture, gl_PointCoord);
+    gl_FragColor = color;
+  }`;
 ```
 
-那这个着色的代码就不对，需要修改一下，要指定纹理的坐标，纹理坐标是会变化的，所以还是先通过attribute传递给顶点着色器，在通过varying传给片元着色器，并且在片元着色器当中texture2D的第二个参数设置为传递来的纹理坐标
+那这个着色的代码就不对，需要修改一下，要指定纹理的坐标，纹理坐标是会变化的，所以还是先通过 attribute 传递给顶点着色器，在通过 varying 传给片元着色器，并且在片元着色器当中 texture2D 的第二个参数设置为传递来的纹理坐标
 
 ```js
-  // 顶点着色器
+// 顶点着色器
 let vertexString = `
-        attribute vec4 a_position;
-        attribute vec2 a_texture_coord;
-        varying vec2 v_texture_coord;
-        uniform mat4 proj;
-        void main(){
-            gl_Position = proj * a_position;
-            v_texture_coord = a_texture_coord;
-        }`;
+  attribute vec4 a_position;
+  attribute vec2 a_texture_coord;
+  varying vec2 v_texture_coord;
+  uniform mat4 proj;
+  void main(){
+    gl_Position = proj * a_position;
+    v_texture_coord = a_texture_coord;
+  }`;
 
 // 片元着色器
 let fragmentString = `
-        precision mediump float;
-        uniform sampler2D texture;
-        varying vec2 v_texture_coord;
-        void main(){
-            vec4 color = texture2D(texture, v_texture_coord);
-            gl_FragColor = color;
-        }`;
+  precision mediump float;
+  uniform sampler2D texture;
+  varying vec2 v_texture_coord;
+  void main(){
+    vec4 color = texture2D(texture, v_texture_coord);
+    gl_FragColor = color;
+  }`;
 ```
 
-调整坐标，每一行都是一个点的位置，其中六个坐标分别代表x，y，z，纹理坐标u，v，其中u和v的范围是0~1，所以需要把x，y，z坐标除以纹理大小，得到纹理坐标
+调整坐标，每一行都是一个点的位置，其中六个坐标分别代表 x，y，z，纹理坐标 u，v，其中 u 和 v 的范围是 0~1，所以需要把 x，y，z 坐标除以纹理大小，得到纹理坐标
 
 ```js
-  let triangleArray = [
-  0, 0, 0, 1.0, 0, 0,
-  0, triangleSize, 0, 1.0, 0, 1,
-  triangleSize, 0, 0, 1.0, 1, 0,
-
-  triangleSize, 0, 0, 1.0, 1, 0,
-  0, triangleSize, 0, 1.0, 0, 1,
-  triangleSize, triangleSize, 0, 1.0, 1, 1
-];
+// 格式化的时候总把这个数组弄乱，我注释了先
+// let triangleArray = [
+//   0, 0, 0, 1.0, 0, 0,
+//   0, triangleSize, 0, 1.0, 0, 1,
+//   triangleSize, 0, 0, 1.0, 1, 0,
+//   triangleSize, 0, 0, 1.0, 1, 0,
+//   0, triangleSize, 0, 1.0, 0, 1,
+//   triangleSize, triangleSize, 0, 1.0, 1, 1
+// ];
 ```
 
-然后就是参数传递，这里的参数传递不同的就是每个参数都要跳过4个，因为这里的顶点着色器传递的顶点坐标是vec4，所以要跳过4个
+然后就是参数传递，这里的参数传递不同的就是每个参数都要跳过 4 个，因为这里的顶点着色器传递的顶点坐标是 vec4，所以要跳过 4 个
 
 ```js
-let aTexCoord = webGL.getAttribLocation(program, 'a_texture_coord');
+let aTexCoord = webGL.getAttribLocation(program, "a_texture_coord");
 webGL.enableVertexAttribArray(aTexCoord);
 webGL.vertexAttribPointer(aTexCoord, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
 ```
 
 最后加载图片绘制纹理就是相同的代码了，这里看一下效果
-<image src='../assets/image/send.png'/>
+<image src='../assets/image/send.png' style="width:400px;height:400px"/>
 
 #### 图片反转
 
-现在是将webGL的坐标转换成了canvas的坐标系，但是如果用的是webGL的坐标系进行添加纹理贴图的时候就会发现图片是反的，这个时候就需要对图片进行反转，如下
+现在是将 webGL 的坐标转换成了 canvas 的坐标系，但是如果用的是 webGL 的坐标系进行添加纹理贴图的时候就会发现图片是反的，这个时候就需要对图片进行反转，如下
 
 - pixelStorei(pname, parmas)是用于图像预处理的函数
 
@@ -427,12 +434,12 @@ webGL.vertexAttribPointer(aTexCoord, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
 webGL.pixelStorei(webGL.UNPACK_FLIP_Y_WEBGL, true);
 ```
 
-|           **参数名 (`pname`)**            |                 **描述**                 |           **可选值 (`param`)**            |
-|:--------------------------------------:|:--------------------------------------:|:--------------------------------------:|
-|           **PACK_ALIGNMENT**           |         指定打包（读取）像素数据时的字节对齐方式。          |               1, 2, 4, 8               |
-|          **UNPACK_ALIGNMENT**          |         指定解包（写入）像素数据时的字节对齐方式。          |               1, 2, 4, 8               |
-|        **UNPACK_FLIP_Y_WEBGL**         |         指定在解包图像数据时是否沿 Y 轴翻转图像。         |            `true` 或 `false`            |
-|   **UNPACK_PREMULTIPLY_ALPHA_WEBGL**   |      指定在解包图像数据时是否将颜色值与 Alpha 值预乘。      |            `true` 或 `false`            |
+|          **参数名 (`pname`)**          |                              **描述**                              |          **可选值 (`param`)**           |
+| :------------------------------------: | :----------------------------------------------------------------: | :-------------------------------------: |
+|           **PACK_ALIGNMENT**           |             指定打包（读取）像素数据时的字节对齐方式。             |               1, 2, 4, 8                |
+|          **UNPACK_ALIGNMENT**          |             指定解包（写入）像素数据时的字节对齐方式。             |               1, 2, 4, 8                |
+|        **UNPACK_FLIP_Y_WEBGL**         |             指定在解包图像数据时是否沿 Y 轴翻转图像。              |            `true` 或 `false`            |
+|   **UNPACK_PREMULTIPLY_ALPHA_WEBGL**   |         指定在解包图像数据时是否将颜色值与 Alpha 值预乘。          |            `true` 或 `false`            |
 | **UNPACK_COLORSPACE_CONVERSION_WEBGL** | 指定在解包图像数据时是否进行颜色空间转换（如从 sRGB 到线性 RGB）。 | `gl.BROWSER_DEFAULT_WEBGL` 或 `gl.NONE` |
 
 #### 让纹理动起来
@@ -440,30 +447,62 @@ webGL.pixelStorei(webGL.UNPACK_FLIP_Y_WEBGL, true);
 在了解了纹理贴图之后，思考一下，如果让纹理动起来，比如让纹理滚动或者旋转，那应该如何实现呢？那就是改变纹理的坐标就可以实现纹理的运动效果。实现起来很简单的，修改片元着色器
 
 ```js
-  let fragmentString = `
-        precision mediump float;
-        uniform sampler2D texture;
-        varying vec2 v_texture_coord;
-        uniform float u_translateX;
-        void main(){
-            vec4 color = texture2D(texture, vec2(v_texture_coord.x + u_translateX,v_texture_coord.y));
-            gl_FragColor = color;
-        }`;
+let fragmentString = `
+  precision mediump float;
+  uniform sampler2D texture;
+  varying vec2 v_texture_coord;
+  uniform float u_translateX;
+  void main(){
+    vec4 color = texture2D(texture, vec2(v_texture_coord.x + u_translateX,v_texture_coord.y));
+    gl_FragColor = color;
+  }`;
+
+// 缩放对应的变量和取值
+`uniform float u_scale;
+vec4 color = texture2D(texture, vec2(v_texture_coord.x * u_scale, v_texture_coord.y * u_scale));`;
 ```
 
-在片元着色器里面，加了一个uniform变量u_translateX，然后通过uniform传递给片元着色器，在texture2D中创建贴图的时候去修改其二维坐标的一个位置，最后在js当中修改传递进来的值
+在片元着色器里面，加了一个 uniform 变量 u_translateX，然后通过 uniform 传递给片元着色器，在 texture2D 中创建贴图的时候去修改其二维坐标的一个位置，最后在 js 当中修改传递进来的值。
+当然其他的旋转、缩放效果也是一样的。去修改片元着色器的纹理坐标，然后通过 uniform 传递
 
 ```js
 let count = 0;
+let scale = 1;
+let maxScale = 4;
 
 function textureAnimate() {
   count += 0.005;
-  let uTranslateX = webGL.getUniformLocation(program, 'u_translateX');
+  if (scale < maxScale) {
+    scale += 0.005;
+  }
+  if (scale >= maxScale) {
+    scale = 1;
+  }
+  let uTranslateX = webGL.getUniformLocation(program, "u_translateX");
   webGL.uniform1f(uTranslateX, count);
+
+  let uScale = webGL.getUniformLocation(program, "u_scale");
+  webGL.uniform1f(uScale, scale);
   draw();
   requestAnimationFrame(textureAnimate);
 }
 ```
 
-当然其他的旋转、缩放效果也是一样的。去修改片元着色器的纹理坐标，然后通过uniform传递
-<image src='../assets/image/send.png'/>
+<image src='../assets/image/send.png' style="width:400px;height:400px"/>
+
+### 多重纹理
+
+既然单层纹理已经搞定了，那么多层纹理是不是往里面再加一个纹理，再通过 js 赋值就完事了呢？照着这个思路来改代码，先调整片元着色器，往里面再加一个 texture
+
+```js
+let fragmentString = `
+  precision mediump float;
+  uniform sampler2D texture1;
+  uniform sampler2D texture2;
+  varying vec2 v_texture_coord;
+  void main(){
+    vec4 color1 = texture2D(texture1, v_texture_coord);
+    vec4 color2 = texture2D(texture2, v_texture_coord);
+    gl_FragColor = color1+color2;
+  }`;
+```
