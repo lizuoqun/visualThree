@@ -124,7 +124,7 @@
     texture1 = initTexture('../assets/image/send.png');
     texture2 = initTexture('../assets/image/man.png');
 
-    draw()
+    draw();
   }
 
   function initTexture(imageSrc) {
@@ -159,7 +159,6 @@
     webGL.activeTexture(webGL.TEXTURE1);
     webGL.bindTexture(webGL.TEXTURE_2D, texture2);
     webGL.uniform1i(uTexture2, 1);
-
 
     webGL.drawArrays(webGL.TRIANGLES, 0, triangleArray.length / 6);
 
