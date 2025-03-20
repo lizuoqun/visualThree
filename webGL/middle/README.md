@@ -51,6 +51,7 @@ webGL.enableVertexAttribArray(aSize);
 let uSize = webGL.getUniformLocation(program, "size2");
 webGL.uniform1f(uSize, Math.random() * 100);
 ```
+
 <image src='../assets/image/send.png'/>
 
 ### 拓展 attribute 和 uniform 的使用
@@ -414,4 +415,55 @@ webGL.vertexAttribPointer(aTexCoord, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
 ```
 
 最后加载图片绘制纹理就是相同的代码了，这里看一下效果
+<image src='../assets/image/send.png'/>
+
+#### 图片反转
+
+现在是将webGL的坐标转换成了canvas的坐标系，但是如果用的是webGL的坐标系进行添加纹理贴图的时候就会发现图片是反的，这个时候就需要对图片进行反转，如下
+
+- pixelStorei(pname, parmas)是用于图像预处理的函数
+
+```js
+webGL.pixelStorei(webGL.UNPACK_FLIP_Y_WEBGL, true);
+```
+
+|           **参数名 (`pname`)**            |                 **描述**                 |           **可选值 (`param`)**            |
+|:--------------------------------------:|:--------------------------------------:|:--------------------------------------:|
+|           **PACK_ALIGNMENT**           |         指定打包（读取）像素数据时的字节对齐方式。          |               1, 2, 4, 8               |
+|          **UNPACK_ALIGNMENT**          |         指定解包（写入）像素数据时的字节对齐方式。          |               1, 2, 4, 8               |
+|        **UNPACK_FLIP_Y_WEBGL**         |         指定在解包图像数据时是否沿 Y 轴翻转图像。         |            `true` 或 `false`            |
+|   **UNPACK_PREMULTIPLY_ALPHA_WEBGL**   |      指定在解包图像数据时是否将颜色值与 Alpha 值预乘。      |            `true` 或 `false`            |
+| **UNPACK_COLORSPACE_CONVERSION_WEBGL** | 指定在解包图像数据时是否进行颜色空间转换（如从 sRGB 到线性 RGB）。 | `gl.BROWSER_DEFAULT_WEBGL` 或 `gl.NONE` |
+
+#### 让纹理动起来
+
+在了解了纹理贴图之后，思考一下，如果让纹理动起来，比如让纹理滚动或者旋转，那应该如何实现呢？那就是改变纹理的坐标就可以实现纹理的运动效果。实现起来很简单的，修改片元着色器
+
+```js
+  let fragmentString = `
+        precision mediump float;
+        uniform sampler2D texture;
+        varying vec2 v_texture_coord;
+        uniform float u_translateX;
+        void main(){
+            vec4 color = texture2D(texture, vec2(v_texture_coord.x + u_translateX,v_texture_coord.y));
+            gl_FragColor = color;
+        }`;
+```
+
+在片元着色器里面，加了一个uniform变量u_translateX，然后通过uniform传递给片元着色器，在texture2D中创建贴图的时候去修改其二维坐标的一个位置，最后在js当中修改传递进来的值
+
+```js
+let count = 0;
+
+function textureAnimate() {
+  count += 0.005;
+  let uTranslateX = webGL.getUniformLocation(program, 'u_translateX');
+  webGL.uniform1f(uTranslateX, count);
+  draw();
+  requestAnimationFrame(textureAnimate);
+}
+```
+
+当然其他的旋转、缩放效果也是一样的。去修改片元着色器的纹理坐标，然后通过uniform传递
 <image src='../assets/image/send.png'/>

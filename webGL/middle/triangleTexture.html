@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL 绘制纹理效果</title>
+    <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
+</head>
+<script>
+  let webGL;
+  let program;
+  const projMat4 = mat4.create();
+
+  // 顶点着色器
+  let vertexString = `
+        attribute vec4 a_position;
+        attribute vec2 a_texture_coord;
+        varying vec2 v_texture_coord;
+        uniform mat4 proj;
+        void main(){
+            gl_Position = proj * a_position;
+            v_texture_coord = a_texture_coord;
+        }`;
+
+  // 片元着色器
+  let fragmentString = `
+        precision mediump float;
+        uniform sampler2D texture;
+        varying vec2 v_texture_coord;
+        uniform float u_translateX;
+        uniform float u_scale;
+        void main(){
+            vec4 color = texture2D(texture, vec2(v_texture_coord.x * u_scale, v_texture_coord.y * u_scale));
+            gl_FragColor = color;
+        }`;
+
+  // 顶点着色器
+  let vertexString1 = `
+        attribute vec4 a_position;
+        uniform mat4 proj;
+        void main(){
+            gl_Position = proj * a_position;
+        }`;
+
+  // 片元着色器
+  let fragmentString1 = `
+        precision mediump float;
+        uniform sampler2D texture;
+        void main(){
+            vec4 color = texture2D(texture, gl_PointCoord);
+            gl_FragColor = color;
+        }`;
+
+  function init() {
+    initWebGL();
+    initShader();
+    initBuffer();
+  }
+
+
+  function initWebGL() {
+    let webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+    mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4);
+  }
+
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
+
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
+
+    if (!webGL.getShaderParameter(vsShader, webGL.COMPILE_STATUS)) {
+      const err = webGL.getShaderInfoLog(vsShader);
+      console.log('顶点 =====', err);
+      return;
+    }
+    if (!webGL.getShaderParameter(fsShader, webGL.COMPILE_STATUS)) {
+      const err = webGL.getShaderInfoLog(fsShader);
+      console.log('片元 =====', err);
+      return;
+    }
+
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
+
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
+
+  const triangleSize = 500;
+
+  let triangleArray = [
+    0, 0, 0, 1.0, 0, 0,
+    0, triangleSize, 0, 1.0, 0, 1,
+    triangleSize, 0, 0, 1.0, 1, 0,
+
+    triangleSize, 0, 0, 1.0, 1, 0,
+    0, triangleSize, 0, 1.0, 0, 1,
+    triangleSize, triangleSize, 0, 1.0, 1, 1
+  ];
+
+  let uTexture;
+
+  function initBuffer() {
+
+    let trianglePosition = new Float32Array(triangleArray);
+    let aPosition = webGL.getAttribLocation(program, 'a_position');
+    let triangleBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, trianglePosition, webGL.STATIC_DRAW);
+    webGL.enableVertexAttribArray(aPosition);
+    webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 6 * 4, 0);
+
+    let aTexCoord = webGL.getAttribLocation(program, 'a_texture_coord');
+    webGL.enableVertexAttribArray(aTexCoord);
+    webGL.vertexAttribPointer(aTexCoord, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
+
+    let uniformProj = webGL.getUniformLocation(program, 'proj');
+    webGL.uniformMatrix4fv(uniformProj, false, projMat4);
+
+    uTexture = webGL.getUniformLocation(program, 'texture');
+    webGL.enable(webGL.BLEND);
+    webGL.blendFunc(webGL.SRC_ALPHA, webGL.ONE_MINUS_SRC_ALPHA);
+    initTexture();
+  }
+
+  function initTexture() {
+    let textureHandle = webGL.createTexture();
+    textureHandle.image = new Image();
+    textureHandle.image.src = '../assets/image/send.png';
+    textureHandle.image.onload = () => {
+      handleLoadedTexture(textureHandle);
+    };
+  }
+
+  function handleLoadedTexture(texture) {
+    webGL.bindTexture(webGL.TEXTURE_2D, texture);
+    // webGL.pixelStorei(webGL.UNPACK_FLIP_Y_WEBGL, true);
+    webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.LINEAR);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.LINEAR);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.REPEAT);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_T, webGL.REPEAT);
+    textureAnimate();
+  }
+
+  let count = 0;
+  let scale = 1;
+  let maxScale = 4;
+
+  function textureAnimate() {
+    count += 0.005;
+    if (scale < maxScale) {
+      scale += 0.005;
+    }
+    if (scale >= maxScale) {
+      scale = 1;
+    }
+    let uTranslateX = webGL.getUniformLocation(program, 'u_translateX');
+    webGL.uniform1f(uTranslateX, count);
+
+    let uScale = webGL.getUniformLocation(program, 'u_scale');
+    webGL.uniform1f(uScale, scale);
+    draw();
+    requestAnimationFrame(textureAnimate);
+  }
+
+  function draw() {
+    webGL.clearColor(0, 0, 0, 1);
+    webGL.clear(webGL.COLOR_BUFFER_BIT);
+    webGL.enable(webGL.DEPTH_TEST);
+    webGL.drawArrays(webGL.TRIANGLES, 0, triangleArray.length / 6);
+  }
+
+</script>
+
+
+<body onload="init()">
+<canvas id="webgl" width="1024" height="768"></canvas>
+</body>
+
+</html>
