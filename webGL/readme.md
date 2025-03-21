@@ -1,0 +1,36 @@
+> dir D:\mygit\threeJs\visualThree\webGL\plane 在window下执行该命令，可以获取这个文件夹下面所有目录
+
+# 目录说明
+
+| 文件/文件夹  | 描述                        |
+|---------|---------------------------|
+| animate | 包含与动画相关的代码文件。             |
+| assets  | 存放项目所需的静态资源文件，如模型、音频、视频等。 |
+| plane   | 包含与平面相关的代码文件或资源。          |
+| texture | 存放项目所需的纹理文件，如贴图、材质等。      |
+
+## animate 文件夹
+
+## plane 文件夹
+
+| 文件名                      | 描述       |
+|--------------------------|----------|
+| drawFivePointedStar.html | 绘制五角星    |
+| drawLine.html            | 绘制线条     |
+| drawManyPoint.html       | 绘制多个点    |
+| drawPoint.html           | 绘制单个点    |
+| drawTriangle.html        | 绘制三角形    |
+| keyTranslate.html        | 通过按键进行平移 |
+| triangleTranslate.html   | 三角形平移    |
+
+## texture 文件夹
+
+| 文件名                         | 描述                   |
+|-----------------------------|----------------------|
+| addManyPositionTexture.html | 添加多个纹理（drawElements） |
+| addManyTexture.html         | 添加多个纹理 （drawArrays）  |
+| addTexture.html             | 添加纹理                 |
+| coloredTriangle.html        | 彩色三角形                |
+| drawPointChange.html        | 绘制单个点（改变其属性）         |
+| triangleManyTexture.html    | 三角形多个纹理              |
+| triangleTexture.html        | 三角形纹理                |

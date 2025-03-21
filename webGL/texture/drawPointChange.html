@@ -112,7 +112,7 @@
 
     const colorArray = new Float32Array([
       1.0, 0.0, 0.0, 1.0,
-      0.0, 1.0, 0.0, 1.0,
+       0.0, 1.0, 0.0, 1.0,
       0.0, 0.0, 1.0, 1.0,
       1.0, 1.0, 0.0, 1.0
     ]);
@@ -127,7 +127,7 @@
   }
 
   function draw(size) {
-    webGL.clearColor(0, 0, 0, 1);
+    webGL.clearColor(0, 0, 0, 1);-
     webGL.clear(webGL.COLOR_BUFFER_BIT);
     webGL.drawArrays(webGL.POINTS, 0, size);
   }
