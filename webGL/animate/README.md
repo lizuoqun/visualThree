@@ -5,3 +5,62 @@
 回到前面关于平移缩放、旋转的例子当中，我们是通过改变传递进去的xy的值来改变的。
 
 在进行基础变换的时候，涉及到多个变量且变化频率高，在实际的webgl应用开发过程中，其复杂程度更令人发指，故引入了数学工具—矩阵。（具有规律性的二维数组）计算机实际上是一个固执的老顽童，它最喜欢有规律性质的东西，所以这样一拍即合，计算机技术与数学理论达成情人关系（webgl内置了矩阵系统）。本堂课的内容就是将变换过程转换成矩阵进行表示。
+
+## glMatrix API
+
+> [glMatrix API 官网...](https://glmatrix.net/docs/module-mat4.html)
+> ，补充：在使用glMatrix-0.9.6.min.js和npm上的glMatrix.js，API是有一定区别的，下面演示的是npm包
+
+### 创建矩阵
+
+返回类型是Float32Array，矩阵的元素个数是16，也就是一个4x4的矩阵。
+
+```js
+const matrix = mat4.create();
+```
+
+### 投影矩阵
+
+生成具有给定边界的透视投影矩阵。far传递null/undefined/no值将生成无限投影矩阵。
+
+```js
+mat4.perspective(out, fovy, aspect, near, far);
+mat4.perspective(matrix, 45, 4 / 3, 1, 100);
+```
+
+| 名称	    | 类型	    | 描述                       |
+|--------|--------|--------------------------|
+| out    | mat4   | mat4截头体矩阵将被写入            |
+| fovy   | number | 垂直视场（弧度）                 |
+| aspect | number | 宽高比。通常视口宽度/高度            |
+| near   | number | 截头体的近界                   |
+| far    | number | 截头体的远边界，可以为null或Infinity |
+
+### 矩阵相乘
+
+将两个mat 4相乘，参数一为目标矩阵，参数二三为要相乘的矩阵。
+
+```js
+const matrix = mat4.create();
+const matrix1 = mat4.create();
+let target = [];
+mat4.multiply(target, matrix, matrix1);
+```
+
+### 单位矩阵
+
+将一个矩阵设置为单位矩阵。单位矩阵是一个4x4的矩阵，其元素值都为0，除了主对角线元素值都为1。
+
+```js
+mat4.identity(matrix);
+```
+
+### 矩阵变化（平移、旋转、缩放）
+
+平移缩放旋转都传递了两个矩阵参数，其中第一个参数是目标矩阵，第二个参数是变化矩阵（不做变换就和第一个传一样的值）。第三个参数是变化参数（平移的xyz值、缩放的xyz值、旋转的弧度和xyz值）。
+
+```js
+mat4.translate(matrix, matrix, [10, 10, 10]);
+mat4.scale(matrix, matrix, [1, 2, 1]);
+mat4.rotate(matrix, matrix, 45, [0, 0, 1]);
+```
