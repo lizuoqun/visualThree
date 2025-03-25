@@ -6,7 +6,7 @@
 
 在进行基础变换的时候，涉及到多个变量且变化频率高，在实际的webgl应用开发过程中，其复杂程度更令人发指，故引入了数学工具—矩阵。（具有规律性的二维数组）计算机实际上是一个固执的老顽童，它最喜欢有规律性质的东西，所以这样一拍即合，计算机技术与数学理论达成情人关系（webgl内置了矩阵系统）。本堂课的内容就是将变换过程转换成矩阵进行表示。
 
-## glMatrix API
+## glMatrix 常用API
 
 > [glMatrix API 官网...](https://glmatrix.net/docs/module-mat4.html)
 > ，补充：在使用glMatrix-0.9.6.min.js和npm上的glMatrix.js，API是有一定区别的，下面演示的是npm包
@@ -63,4 +63,32 @@ mat4.identity(matrix);
 mat4.translate(matrix, matrix, [10, 10, 10]);
 mat4.scale(matrix, matrix, [1, 2, 1]);
 mat4.rotate(matrix, matrix, 45, [0, 0, 1]);
+```
+
+## WebGL+矩阵变化
+
+修改着色器，添加一个中间矩阵，然后把中间矩阵传递给着色器。
+
+```js
+const vertexString = `
+  attribute vec4 a_position;
+  uniform mat4 u_formMatrix;
+  void main(){
+    gl_Position = u_formMatrix * a_position;
+    gl_PointSize = 40.0;
+  }`;
+```
+
+在js当中通过glMatrix.js进行矩阵变换，然后用webGL的uniformMatrix4fv方法传递给着色器。
+
+```js
+function animate() {
+  const middleMat4 = mat4.create();
+  mat4.identity(middleMat4);
+  mat4.translate(middleMat4, [0, 0.5, 0]);
+  mat4.rotate(middleMat4, 0.5 * Math.PI, [0, 0, 1]);
+  mat4.scale(middleMat4, [0.5, 0.5, 0.5]);
+  let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
+  webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
+}
 ```
