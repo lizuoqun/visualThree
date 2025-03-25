@@ -86,6 +86,8 @@ function animate() {
   const middleMat4 = mat4.create();
   mat4.identity(middleMat4);
   mat4.translate(middleMat4, [0, 0.5, 0]);
+  mat4.rotate(middleMat4, 0.5 * Math.PI, [0, 0, 1]);
+  mat4.scale(middleMat4, [0.5, 0.5, 0.5]);
   let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
   webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
 }
