@@ -11,6 +11,12 @@
 
 ## animate 文件夹
 
+| 文件名                 | 描述             |
+|---------------------|----------------|
+| clockTriangle.html  | 时钟效果案例         |
+| glMatrix-API.html   | glMatrix API案例 |
+| triangleMatrix.html | 矩阵变换           |
+
 ## plane 文件夹
 
 | 文件名                      | 描述       |
