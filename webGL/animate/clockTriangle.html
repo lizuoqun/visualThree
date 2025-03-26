@@ -24,7 +24,7 @@
   // 片元着色器
   const fragmentString = `
         void main(){
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
         }`;
 
   function init() {
@@ -71,13 +71,21 @@
     webGL.useProgram(program);
   }
 
+  const reverse = -0.05;
+  const secondWidth = 0.01;
+  const minuteWidth = 0.015;
+  const hourWidth = 0.02;
+  const secondLength = 0.6;
+  const minuteLength = 0.4;
+  const hourLength = 0.2;
+
   function initBufferSecond() {
 
     let triangleArray = [
-      0, 0, 0, 1.0,
-      0, 0.5, 0, 1.0,
-      0.01, 0.5, 0, 1.0,
-      0.01, 0, 0, 1.0
+      0, reverse, 0, 1.0,
+      0, secondLength, 0, 1.0,
+      secondWidth, secondLength, 0, 1.0,
+      secondWidth, reverse, 0, 1.0
     ];
 
     let trianglePosition = new Float32Array(triangleArray);
@@ -100,16 +108,16 @@
     webGL.clearColor(0.0, 0.0, 0.0, 1.0);
     webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
     webGL.enable(webGL.DEPTH_TEST);
-    webGL.drawArrays(webGL.TRIANGLES, 0, 4);
+    webGL.drawArrays(webGL.TRIANGLE_FAN, 0, 4);
   }
 
   function initBufferMinute() {
 
     let triangleArray = [
-      0, 0, 0, 1.0,
-      0, 0.4, 0, 1.0,
-      0.01, 0.4, 0, 1.0,
-      0.01, 0, 0, 1.0
+      0, reverse, 0, 1.0,
+      0, minuteLength, 0, 1.0,
+      minuteWidth, minuteLength, 0, 1.0,
+      minuteWidth, reverse, 0, 1.0
     ];
 
     let trianglePosition = new Float32Array(triangleArray);
@@ -129,16 +137,16 @@
     let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
     webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
 
-    webGL.drawArrays(webGL.TRIANGLES, 0, 4);
+    webGL.drawArrays(webGL.TRIANGLE_FAN, 0, 4);
   }
 
   function initBufferHour() {
 
     let triangleArray = [
-      0, 0, 0, 1.0,
-      0, 0.3, 0, 1.0,
-      0.01, 0.3, 0, 1.0,
-      0.01, 0, 0, 1.0
+      0, reverse, 0, 1.0,
+      0, hourLength, 0, 1.0,
+      hourWidth, hourLength, 0, 1.0,
+      hourWidth, reverse, 0, 1.0
     ];
 
     let trianglePosition = new Float32Array(triangleArray);
@@ -158,7 +166,7 @@
     let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
     webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
 
-    webGL.drawArrays(webGL.TRIANGLES, 0, 4);
+    webGL.drawArrays(webGL.TRIANGLE_FAN, 0, 4);
   }
 </script>
 
