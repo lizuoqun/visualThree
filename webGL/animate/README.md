@@ -92,3 +92,42 @@ function animate() {
   webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
 }
 ```
+
+## 案例：WebGL时钟效果
+
+和上面webGL+矩阵变化的代码一样，在顶点着色器当中传入一个u_formMatrix用来计算，随后在initBuffer当中重新设置顶点坐标用来绘制三角带，如下
+
+```js
+let triangleArray = [
+  0, -0.1, 0, 1.0,
+  0, 0.4, 0, 1.0,
+  0.01, 0.4, 0, 1.0,
+  0.01, -0.1, 0, 1.0
+];
+webGL.drawArrays(webGL.TRIANGLE_FAN, 0, 4);
+```
+
+之后就是矩阵变换的代码，用rotate选择的方法去改变矩阵，以秒钟为例，那就是一秒钟走2*Math.PI弧度除以60，这样一分钟60秒刚好一圈，那么代码就是这样实现的。
+
+```mermaid
+graph LR
+    A(得到当前秒) --> B(计算弧度)
+    C(初始化矩阵) --> D(单元化)
+    D --> E(旋转矩阵)
+    B --> E
+    E --> F(传递矩阵)
+```
+
+```js
+const second = new Date().getSeconds();
+const rotate = 2 * Math.PI / 60 * second;
+const middleMat4 = mat4.create();
+mat4.identity(middleMat4);
+mat4.rotate(middleMat4, -rotate, [0, 0, 1]);
+let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
+webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
+```
+
+随后分钟小时的代码就一样了，分钟和秒钟的计算是一样的，时针就是将60换成12即可。最后就是添加一个setInterval每隔一秒调用一次。注意：在这里绘制的时候，只需要在秒针绘制的时机先clear一遍，分针和时针的时候直接调用drawArray绘制即可，不用再次clear
+
+> 完整代码地址：[https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html](https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html)
