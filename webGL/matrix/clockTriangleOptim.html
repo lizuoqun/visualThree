@@ -88,8 +88,7 @@
       secondWidth, reverse, 0, 1.0
     ];
     initPosition(triangleArray);
-    const second = new Date().getSeconds();
-    initBuffer('second', second);
+    initBuffer('second', new Date().getSeconds());
   }
 
   function initBufferMinute() {
@@ -102,9 +101,7 @@
     ];
 
     initPosition(triangleArray);
-
-    const minute = new Date().getMinutes();
-    initBuffer('minute', minute);
+    initBuffer('minute', new Date().getMinutes());
   }
 
   function initBufferHour() {
@@ -117,8 +114,7 @@
     ];
 
     initPosition(triangleArray);
-    const hour = new Date().getHours();
-    initBuffer('hour', hour);
+    initBuffer('hour', new Date().getHours());
   }
 
   /**
@@ -142,18 +138,18 @@
   };
 
   /**
-   * @params type 12 或者 60
+   * @params key typeof typeObject 区分秒针、分钟、时针
    * @params date 当前时间、时分秒
    * */
-  function initBuffer(type, date) {
-    const rotate = 2 * Math.PI / typeObject[type] * date;
+  function initBuffer(key, date) {
+    const rotate = 2 * Math.PI / typeObject[key] * date;
     const middleMat4 = mat4.create();
     mat4.identity(middleMat4);
     mat4.rotate(middleMat4, -rotate, [0, 0, 1]);
     let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
     webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
 
-    if (type === 'second') {
+    if (key === 'second') {
       webGL.clearColor(0.0, 0.0, 0.0, 1.0);
       webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
       webGL.enable(webGL.DEPTH_TEST);
