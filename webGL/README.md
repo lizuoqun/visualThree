@@ -4,12 +4,19 @@
 
 | 文件/文件夹  | 描述                           |
 |---------|------------------------------|
-| animate | 包含与动画相关的代码文件。                |
 | assets  | 存放项目所需的静态资源文件，如模型、图片、js包源码等。 |
+| matrix  | 矩阵变换相关代码案例。                  |
 | plane   | 包含与平面相关的代码文件或资源。             |
 | texture | 存放项目所需的纹理文件，如贴图、材质等。         |
 
-## animate 文件夹
+## matrix 文件夹
+
+| 文件名                     | 描述             |
+|-------------------------|----------------|
+| clockTriangle.html      | 时钟效果案例         |
+| clockTriangleOptim.html | 时钟效果案例（代码优化版）  |
+| glMatrix-API.html       | glMatrix API案例 |
+| triangleMatrix.html     | 平面+矩阵变换        |
 
 ## plane 文件夹
 

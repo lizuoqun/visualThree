@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时针效果（优化版）</title>
+    <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
+</head>
+<script>
+  let webGL;
+  const projMat4 = mat4.create();
+  let program;
+
+  // 顶点着色器
+  const vertexString = `
+        attribute vec4 a_position;
+        uniform mat4 u_formMatrix;
+        void main(){
+            gl_Position = u_formMatrix * a_position;
+            gl_PointSize = 40.0;
+        }`;
+
+  // 片元着色器
+  const fragmentString = `
+        void main(){
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }`;
+
+  function init() {
+    initWebGL();
+    initShader();
+    initBufferSecond();
+    initBufferMinute();
+    initBufferHour();
+  }
+
+  setInterval(() => {
+    initBufferSecond();
+    initBufferMinute();
+    initBufferHour();
+  }, 1000);
+
+  function initWebGL() {
+    let webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+    mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4);
+  }
+
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
+
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
+
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
+
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
+
+  const reverse = -0.05;
+  const secondWidth = 0.01;
+  const minuteWidth = 0.015;
+  const hourWidth = 0.02;
+  const secondLength = 0.6;
+  const minuteLength = 0.4;
+  const hourLength = 0.2;
+
+  function initBufferSecond() {
+
+    let triangleArray = [
+      0, reverse, 0, 1.0,
+      0, secondLength, 0, 1.0,
+      secondWidth, secondLength, 0, 1.0,
+      secondWidth, reverse, 0, 1.0
+    ];
+    initPosition(triangleArray);
+    initBuffer('second', new Date().getSeconds());
+  }
+
+  function initBufferMinute() {
+
+    let triangleArray = [
+      0, reverse, 0, 1.0,
+      0, minuteLength, 0, 1.0,
+      minuteWidth, minuteLength, 0, 1.0,
+      minuteWidth, reverse, 0, 1.0
+    ];
+
+    initPosition(triangleArray);
+    initBuffer('minute', new Date().getMinutes());
+  }
+
+  function initBufferHour() {
+
+    let triangleArray = [
+      0, reverse, 0, 1.0,
+      0, hourLength, 0, 1.0,
+      hourWidth, hourLength, 0, 1.0,
+      hourWidth, reverse, 0, 1.0
+    ];
+
+    initPosition(triangleArray);
+    initBuffer('hour', new Date().getHours());
+  }
+
+  /**
+   * @params triangleArray 顶点数组
+   * */
+  function initPosition(triangleArray) {
+    let trianglePosition = new Float32Array(triangleArray);
+    let aPosition = webGL.getAttribLocation(program, 'a_position');
+
+    let triangleBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, trianglePosition, webGL.STATIC_DRAW);
+    webGL.enableVertexAttribArray(aPosition);
+    webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 4 * 4, 0);
+  }
+
+  const typeObject = {
+    'second': 60,
+    'minute': 60,
+    'hour': 12
+  };
+
+  /**
+   * @params key typeof typeObject 区分秒针、分钟、时针
+   * @params date 当前时间、时分秒
+   * */
+  function initBuffer(key, date) {
+    const rotate = 2 * Math.PI / typeObject[key] * date;
+    const middleMat4 = mat4.create();
+    mat4.identity(middleMat4);
+    mat4.rotate(middleMat4, -rotate, [0, 0, 1]);
+    let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
+    webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
+
+    if (key === 'second') {
+      webGL.clearColor(0.0, 0.0, 0.0, 1.0);
+      webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
+      webGL.enable(webGL.DEPTH_TEST);
+    }
+
+    webGL.drawArrays(webGL.TRIANGLE_FAN, 0, 4);
+  }
+</script>
+
+
+<body onload="init()">
+<canvas id="webgl" width="1024" height="768"></canvas>
+</body>
+
+</html>

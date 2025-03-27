@@ -1,15 +1,70 @@
-# 动画
-
 ## 矩阵变换
 
 回到前面关于平移缩放、旋转的例子当中，我们是通过改变传递进去的xy的值来改变的。
 
 在进行基础变换的时候，涉及到多个变量且变化频率高，在实际的webgl应用开发过程中，其复杂程度更令人发指，故引入了数学工具—矩阵。（具有规律性的二维数组）计算机实际上是一个固执的老顽童，它最喜欢有规律性质的东西，所以这样一拍即合，计算机技术与数学理论达成情人关系（webgl内置了矩阵系统）。本堂课的内容就是将变换过程转换成矩阵进行表示。
 
+### 矩阵动画推演
+
+下面先展示了在数学方面上对xyz轴的数据进行相对应的变化，而后是在矩阵层面上变化的值
+
+#### 平移
+
+```js
+x1 = x + Tx;
+y1 = y + Ty;
+z1 = z + Tz;
+```
+
+#### 旋转
+
+```js
+x1 = x * cos(angle) - y * sin(angle);
+y1 = y * cos(angle) + x * sin(angle);
+```
+
+#### 缩放
+
+```js
+x1 = x * Sx;
+y1 = y * Sy;
+z1 = z * Sz;
+```
+
+### 矩阵运算案例
+
+#### 加（减）法
+
+只有同型矩阵之间才可以进行加（减）法运算，将两个矩阵相同位置的元相加即可，m行n列的两个矩阵相加（减）后得到一个新的m行n列矩阵，例如
+
+```math
+1,2,3,4  +  3,4,5,6  =  4,6,8,10
+2,3,4,5  +  2,3,4,5  =  4,6,8,10
+```
+
+#### 数乘
+
+数乘即将矩阵乘以一个常量，矩阵中的每个元都与这个常量相乘，例如
+
+```math
+1,2,3  *  3  =  3,6,9
+```
+
+#### 乘法
+
+两个矩阵的乘法仅当第一个矩阵的列数和另一个矩阵的行数相等时才能定义
+
+```math
+1,2,3  *  3,4  =  1*3+2*2+3*3  1*4+2*3+3*4  = 16 22
+2,3,4  *  2,3  =  2*3+3*2+4*3  2*4+3*3+4*4  = 24 33
+          3,4  =  
+```
+
 ## glMatrix 常用API
 
 > [glMatrix API 官网...](https://glmatrix.net/docs/module-mat4.html)
-> ，补充：在使用glMatrix-0.9.6.min.js和npm上的glMatrix.js，API是有一定区别的，下面演示的是npm包
+>
+> 补充：在使用glMatrix-0.9.6.min.js和npm上的glMatrix.js，API是有一定区别的，下面是用最新的glMatrix
 
 ### 创建矩阵
 
@@ -67,7 +122,22 @@ mat4.rotate(matrix, matrix, 45, [0, 0, 1]);
 
 ## WebGL+矩阵变化
 
-修改着色器，添加一个中间矩阵，然后把中间矩阵传递给着色器。
+整体逻辑如下mermaid图
+
+```mermaid
+graph TB
+    subgraph 数据组装
+        变化值 --> uniformMatrix4fv
+        uniformMatrix4fv --> 赋值给shader
+    end
+    A(initWebGL) --> B(initShader)
+    B --> C(initBuffer)
+    数据组装 --> C
+    E(render) --> D
+    C --> D(draw)
+```
+
+修改着色器，添加一个中间矩阵，然后把中间矩阵传递给着色器。版本为0.9.6
 
 ```js
 const vertexString = `
@@ -80,6 +150,12 @@ const vertexString = `
 ```
 
 在js当中通过glMatrix.js进行矩阵变换，然后用webGL的uniformMatrix4fv方法传递给着色器。
+
+uniformMatrix4fv 为 uniform 变量指定矩阵值
+
+- 参数一：是指定待修改 uniform 变量的存储位置
+- 参数二：指定是否转置矩阵
+- 参数三：序列值
 
 ```js
 function animate() {
@@ -130,4 +206,5 @@ webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
 
 随后分钟小时的代码就一样了，分钟和秒钟的计算是一样的，时针就是将60换成12即可。最后就是添加一个setInterval每隔一秒调用一次。注意：在这里绘制的时候，只需要在秒针绘制的时机先clear一遍，分针和时针的时候直接调用drawArray绘制即可，不用再次clear
 
-> 完整代码地址：[https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html](https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html)
+>
+完整代码地址：[https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html](https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html)
