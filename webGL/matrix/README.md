@@ -1,3 +1,5 @@
+# 矩阵操控
+
 ## 矩阵变换
 
 回到前面关于平移缩放、旋转的例子当中，我们是通过改变传递进去的xy的值来改变的。
@@ -208,3 +210,128 @@ webGL.uniformMatrix4fv(uniformMatrix, false, middleMat4);
 
 >
 完整代码地址：[https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html](https://github.com/lizuoqun/visualThree/blob/main/webGL/animate/clockTriangle.html)
+
+# 三维世界
+
+## 视点 & 视线
+
+观察者的位置就是视点，从视点出发，观察者能看到的就是视线。
+
+### 调整视口观察三维对象
+
+```mermaid
+graph LR
+    三角形 --> 分层级
+    设置颜色 --> 分层级
+    分层级 --> lookAt
+    lookAt --> 改变视口观察
+```
+
+前面的案例研究了xy轴的二维平面对象，而三维就是给z设置了对应的值，而改变观察的方向就能看到不同的结果。这里以三角形绘制为例，参考前面的代码实现，先绘制三个三角形，并且修改其z轴的值，在三个不同的平面上
+
+```js
+let triangleArray = [
+  0.0, 0.5, -0.4, 1.0,
+  -0.5, -0.5, -0.4, 1.0,
+  0.5, -0.5, -0.4, 1.0,
+
+  0.5, 0.4, -0.2, 1.0,
+  -0.5, 0.4, -0.2, 1.0,
+  0.0, -0.6, -0.2, 1.0,
+
+  0.0, 0.4, 0.0, 1,
+  -0.4, -0.4, 0.0, 1,
+  0.4, -0.4, 0.0, 1
+];
+```
+
+给每一个层级的三角形设置一下不同的颜色，上面可以区分有三个层级，分别位于z的-0.4、-0.2、0.0三个位置上，修改这个数组对象，就代表着一个点对象有八个数值，分别是x、y、z、1、r、g、b、a，将颜色值和点绑定在一起
+
+```js
+let triangleArray = [
+  0.0, 0.5, -0.4, 1.0, 0.4, 1.0, 0.4, 1,
+  -0.5, -0.5, -0.4, 1.0, 0.4, 1.0, 0.4, 1,
+  0.5, -0.5, -0.4, 1.0, 0.4, 1.0, 0.4, 1,
+
+  0.5, 0.4, -0.2, 1.0, 1.0, 0.4, 0.4, 1,
+  -0.5, 0.4, -0.2, 1.0, 1.0, 0.4, 0.4, 1,
+  0.0, -0.6, -0.2, 1.0, 1.0, 0.4, 0.4, 1,
+
+  0.0, 0.4, 0.0, 1, 0.4, 0.4, 1.0, 1,
+  -0.4, -0.4, 0.0, 1, 0.4, 0.4, 1.0, 1,
+  0.4, -0.4, 0.0, 1, 0.4, 0.4, 1.0, 1
+];
+```
+
+修改着色器代码，这里使用varying变量，先将颜色值传递给顶点着色器，再透传给片元着色器中，根据varying变量的值，设置颜色。
+
+```js
+// 顶点着色器
+const vertexString = `
+  attribute vec4 a_position;
+  attribute vec4 a_color;
+  varying vec4 color;
+    void main(){
+      gl_Position =  a_position;
+      color = a_color;
+  }`;
+
+// 片元着色器
+const fragmentString = `
+  precision mediump float;
+  varying vec4 color;
+  void main(){
+    gl_FragColor = color;
+  }`;
+```
+
+进行赋值，在js当中通过vertexAttribPointer将颜色值传递给着色器当中的a_color变量，同时因为数组的内容改了，之前是4个数据一个点现在是8个数据一个点，所以设置点的代码也要调整
+
+```js
+// 设置点坐标
+webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 8 * 4, 0);
+// 调整不同层级三角形的颜色
+let aColor = webGL.getAttribLocation(program, 'a_color');
+webGL.enableVertexAttribArray(aColor);
+webGL.vertexAttribPointer(aColor, 4, webGL.FLOAT, false, 8 * 4, 4 * 4);
+```
+
+改变视角：在顶点着色器当中添加u_formMatrix，使用lookAt方法设置视点，并传递给着色器中
+
+```js
+let modelView = mat4.create();
+mat4.identity(modelView);
+modelView = mat4.lookAt(modelView, [0, -0.5, 0.2], [0, 0, 0], [0, 1, 0]);
+let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
+webGL.uniformMatrix4fv(uniformMatrix, false, modelView);
+```
+
+**lookAt(out, eye, center, up)：** 使用给定的眼睛位置、焦点和上方向轴生成注视矩阵
+
+参数说明
+
+| 名称	    | 类型	          | 描述        |
+|--------|--------------|-----------|
+| out    | mat4         | 截头体矩阵将被写入 |
+| eye    | ReadonlyVec3 | 视口位置      |
+| center | ReadonlyVec3 | 观看者正在观看的点 |
+| up     | ReadonlyVec3 | 指定上方向     |
+
+### 叠加矩阵变化
+
+可以再创建一个新的矩阵进行旋转90度，之后将视口矩阵和旋转矩阵乘积重新赋值也就完成了叠加矩阵变化。
+
+```js
+let ModelMatrix = mat4.create();
+mat4.identity(ModelMatrix);
+mat4.rotate(ModelMatrix, ModelMatrix, Math.PI / 2, [0, 0, 1]);
+
+let ViewMatrix = mat4.create();
+mat4.identity(ViewMatrix);
+ViewMatrix = mat4.lookAt(ViewMatrix, [0, 0, 0.3], [0, 0, 0], [0, 1, 0]);
+let mvMatrix = mat4.create();
+mat4.multiply(mvMatrix, ViewMatrix, ModelMatrix);
+// 最后将这个进行赋值
+let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
+webGL.uniformMatrix4fv(uniformMatrix, false, mvMatrix);
+```
