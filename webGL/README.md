@@ -19,6 +19,7 @@
 | effect3dDomain.html     | 改变可视域          |
 | effect3dKeyBoard.html   | 视口改变+键盘操控      |
 | glMatrix-API.html       | glMatrix API案例 |
+| perspective.html        | 透视投影案例         |
 | triangleMatrix.html     | 平面+矩阵变换        |
 
 ## plane 文件夹

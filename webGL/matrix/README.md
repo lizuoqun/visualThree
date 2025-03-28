@@ -384,6 +384,15 @@ webGL.uniformMatrix4fv(uniformMatrix, false, ProjMatrix);
 | near   | number | 近                     |
 | far    | number | 远                     |
 
+创建一个透视投影矩阵，并赋值给uniformMatrix，去修改传入的角度的时候可以观察到变化
+
+```js
+let ProjMatrix = mat4.create();
+mat4.identity(ProjMatrix);
+//角度小，看到的物体大，角度大，看到的物体小。
+mat4.perspective(ProjMatrix, 160 * Math.PI / 180, 1, 1, 100); //修改可视域范围
+```
+
 #### 正射投影和透视投影的区别
 
 - 在透视投影下，产生的三维场景看上去更是有深度感，更加自然，因为我们平时观察真实世界用的也是透视投影。在大多数情况下，比如三维射击类游戏中，我们都应当采用透视投影。
