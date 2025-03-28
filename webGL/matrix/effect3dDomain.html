@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三维展示效果（改变可视域）</title>
+</head>
+<script type="module">
+  import * as mat4 from '../assets/js/gl-matrix/esm/mat4.js';
+
+  let webGL;
+  let program;
+
+  // 顶点着色器
+  const vertexString = `
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        varying vec4 color;
+        uniform mat4 u_formMatrix;
+        void main(){
+            gl_Position = u_formMatrix * a_position;
+            color = a_color;
+        }`;
+
+  // 片元着色器
+  const fragmentString = `
+        precision mediump float;
+        varying vec4 color;
+        void main(){
+            gl_FragColor = color;
+        }`;
+
+  function init() {
+    initWebGL();
+    initShader();
+    initBuffer();
+    initEvent();
+    initText(near, far);
+  }
+
+
+  function initWebGL() {
+    let webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+  }
+
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
+
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
+
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
+
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
+
+
+  function initEvent() {
+    document.onkeydown = handleKeyDown;
+  }
+
+  function handleKeyDown(event) {
+    const angle = event.code;
+    if (angle === 'ArrowUp' || angle === 'KeyW') {
+      near += 1;
+    } else if (angle === 'ArrowDown' || angle === 'KeyS') {
+      near -= 1;
+    } else if (angle === 'ArrowLeft' || angle === 'KeyA') {
+      far += 1;
+    } else if (angle === 'ArrowRight' || angle === 'KeyD') {
+      far -= 1;
+    }
+    initText(near, far);
+    initViewPort()
+  }
+
+  function initText(near, far) {
+    document.getElementById('text').innerHTML = 'near:' + near + '<br/>' + 'far:' + far;
+  }
+
+  function initBuffer() {
+    let triangleArray = [
+      0.0, 70, -40, 1, 1, 0, 0, 1,
+      -50, -30, -40, 1, 1, 0, 0, 1, // 绿色
+      50, -30, -40, 1, 1, 0, 0, 1,
+
+      50, 40, -20, 1, 1.0, 1.0, 0.4, 1,
+      -50, 40, -20, 1, 1.0, 1.0, 0.4, 1,
+      0.0, -60, -20, 1, 1.0, 1.0, 0.4, 1,// 黄色
+
+      0.0, 50, 0.0, 1, 0.4, 0.4, 1.0, 1,
+      -50, -50, 0.0, 1, 0.4, 0.4, 1.0, 1,
+      50, -50, 0.0, 1, 0.4, 0.4, 1.0, 1 // 蓝色
+    ];
+    let trianglePosition = new Float32Array(triangleArray);
+    let aPosition = webGL.getAttribLocation(program, 'a_position');
+
+    let triangleBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, trianglePosition, webGL.STATIC_DRAW);
+    webGL.enableVertexAttribArray(aPosition);
+    webGL.vertexAttribPointer(aPosition, 4, webGL.FLOAT, false, 8 * 4, 0);
+
+    let aColor = webGL.getAttribLocation(program, 'a_color');
+    webGL.enableVertexAttribArray(aColor);
+    webGL.vertexAttribPointer(aColor, 4, webGL.FLOAT, false, 8 * 4, 4 * 4);
+
+    initViewPort();
+  }
+
+  let near = 0;
+  let far = 50;
+
+  function initViewPort() {
+
+    let ProjMatrix = mat4.create();
+    mat4.identity(ProjMatrix);
+    mat4.ortho(ProjMatrix, -100, 100, -100, 100, near, far);    //修改可视域范围
+
+    let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
+    webGL.uniformMatrix4fv(uniformMatrix, false, ProjMatrix);
+
+    draw();
+  }
+
+  function draw() {
+    webGL.clearColor(0, 0, 0, 1);
+    webGL.clear(webGL.COLOR_BUFFER_BIT);
+    webGL.drawArrays(webGL.TRIANGLES, 0, 9);
+  }
+
+  init();
+</script>
+
+
+<body>
+<canvas id="webgl" width="1024" height="768"></canvas>
+<div id="text"></div>
+</body>
+
+</html>

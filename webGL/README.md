@@ -15,6 +15,9 @@
 |-------------------------|----------------|
 | clockTriangle.html      | 时钟效果案例         |
 | clockTriangleOptim.html | 时钟效果案例（代码优化版）  |
+| effect3d.html           | 三维效果展示         |
+| effect3dDomain.html     | 改变可视域          |
+| effect3dKeyBoard.html   | 视口改变+键盘操控      |
 | glMatrix-API.html       | glMatrix API案例 |
 | triangleMatrix.html     | 平面+矩阵变换        |
 

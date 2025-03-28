@@ -335,3 +335,57 @@ mat4.multiply(mvMatrix, ViewMatrix, ModelMatrix);
 let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
 webGL.uniformMatrix4fv(uniformMatrix, false, mvMatrix);
 ```
+
+## 可视范围（正射投影）
+
+在上一个案例当中，当视点在极右或极左的位置时，三角形会缺少一部分。原因是没有指定可视范围，即实际观察得到的区域边界
+
+两类常用的可视空间：
+
+- 长方体可视空间，也称盒状空间，由正射投影产生
+- 四棱锥/金字塔可视空间，由透视投影产生
+
+可视空间由前后两个矩形表面确定，分别称近裁剪面（near）和远裁剪面（far）
+
+改变视口可视域：**ortho(out, left, right, bottom, top, near, far)**：生成具有给定边界的正交投影矩阵
+
+| 名称	    | 类型	    | 描述      |
+|--------|--------|---------|
+| out    | mat4   | 输出矩阵    |
+| left   | number | 截头体的左边界 |
+| right  | number | 右边界     |
+| bottom | number | 底边界     |
+| top    | number | 上边界     |
+| near   | number | 近       |
+| far    | number | 远       |
+
+改变视口可视域，通过ortho方法设置可视域范围，这样他的坐标系取值就变成了canvas的坐标系，绘制图形的坐标值也要进行相对应的调整
+
+```js
+let ProjMatrix = mat4.create();
+mat4.identity(ProjMatrix);
+mat4.ortho(ProjMatrix, -100, 100, -100, 100, near, far);    //修改可视域范围
+
+let uniformMatrix = webGL.getUniformLocation(program, 'u_formMatrix');
+webGL.uniformMatrix4fv(uniformMatrix, false, ProjMatrix);
+```
+
+### 可视空间（透视投影）
+
+在正射投影的可视空间中，不管三角形与视点的距离是远是近，它有多大，那么画出来就有多大。为了打破这条限制，使用透视投影可视空间，它将使场景具有深度性
+
+设置透视投影：**perspective(out, fovy, aspect, near, far)**：生成具有给定边界的透视投影矩阵
+
+| 名称	    | 类型	    | 描述                    |
+|--------|--------|-----------------------|
+| out    | mat4   | 输出矩阵                  |
+| fovy   | number | 垂直方向的视野角度（上截面与下截面的角度） |
+| aspect | number | 纵横比（宽高比）              |
+| near   | number | 近                     |
+| far    | number | 远                     |
+
+#### 正射投影和透视投影的区别
+
+- 在透视投影下，产生的三维场景看上去更是有深度感，更加自然，因为我们平时观察真实世界用的也是透视投影。在大多数情况下，比如三维射击类游戏中，我们都应当采用透视投影。
+- 正射投影的好处是用户可以方便地比较场景中物体( 比如两个原子的模型)
+  的大小，这是因为物体看上去的大小与其所在的位置没有关系。在建筑平面图等技术绘图的相关场合，应当使用这种投影。
