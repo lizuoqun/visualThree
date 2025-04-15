@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>深度缓冲区....</title>
+
+    <script type="module">
+      import * as mat4 from '../assets/js/gl-matrix/esm/mat4.js';
+
+      console.log(mat4);
+
+      let vertexString = `
+        attribute vec4 a_position;
+        uniform mat4 u_formMatrix;
+        uniform mat4 proj;
+        attribute vec4 a_color;
+        varying vec4 color;
+        void main(void){
+            gl_Position =   u_formMatrix * a_position;
+            color = a_color;
+        }
+        `;
+      let fragmentString = `
+        precision mediump float;
+        varying vec4 color;
+        void main(void){
+          gl_FragColor =color;
+        }
+        `;
+
+      function init() {
+        initWebgl();
+        initShader();
+        initBuffer();
+      }
+
+      let webGL;
+      let program;
+      let webglDiv;
+
+      function initWebgl() {
+        webglDiv = document.getElementById('myCanvas');
+        webGL = webglDiv.getContext('webgl');
+        webGL.viewport(0, 0, webglDiv.clientWidth, webglDiv.clientHeight);
+
+      }
+
+      function initShader() {
+
+        // 创建着色器对象（顶点、片元）
+        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+        // 绑定着色器源代码
+        webGL.shaderSource(vsShader, vertexString);
+        webGL.shaderSource(fsShader, fragmentString);
+
+        // 编译着色器对象
+        webGL.compileShader(vsShader);
+        webGL.compileShader(fsShader);
+
+        // 创建程序对象和shader对象进行绑定
+        program = webGL.createProgram();
+        webGL.attachShader(program, vsShader);
+        webGL.attachShader(program, fsShader);
+
+        // webGL和项目中间进行绑定和使用
+        webGL.linkProgram(program);
+        webGL.useProgram(program);
+      }
+
+      function initBuffer() {
+        let arr = [
+          0.0, 100, -80, 1, 1, 0, 0, 1,
+          -50, -100, -80, 1, 1, 0, 0, 1,
+          50, -100, -80, 1, 1, 0, 0, 1,// 红色
+
+          0, 100, -60, 1, 1.0, 1.0, 0.4, 1,
+          -50, -100, -60, 1, 1.0, 1.0, 0.4, 1,
+          50, -100, -60, 1, 1.0, 1.0, 0.4, 1,// 黄色
+
+          0.0, 100, -35.0, 1, 0.4, 0.4, 1.0, 1,
+          -50, -100, -35.0, 1, 0.4, 0.4, 1.0, 1,
+          50, -100, -35.0, 1, 0.4, 0.4, 1.0, 1 // 蓝色
+        ];
+
+        let pointPosition = new Float32Array(arr);
+        let aPsotion = webGL.getAttribLocation(program, 'a_position');
+        let triangleBuffer = webGL.createBuffer();
+        webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+        webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
+        webGL.enableVertexAttribArray(aPsotion);
+        webGL.vertexAttribPointer(aPsotion, 4, webGL.FLOAT, false, 8 * 4, 0);
+        let aColor = webGL.getAttribLocation(program, 'a_color');
+        webGL.enableVertexAttribArray(aColor);
+        webGL.vertexAttribPointer(aColor, 4, webGL.FLOAT, false, 8 * 4, 4 * 4);
+
+
+        let ProjMatrix = mat4.create();
+        mat4.identity(ProjMatrix);
+        //角度小，看到的物体大，角度大，看到的物体小。
+        mat4.perspective(ProjMatrix, 60 * Math.PI / 180, webglDiv.clientWidth / webglDiv.clientHeight, 1, 1000);    //修改可视域范围
+
+
+        let uniformMatrix1 = webGL.getUniformLocation(program, 'u_formMatrix');
+
+        let ModelMatrix = mat4.create();
+        mat4.identity(ModelMatrix);
+        mat4.translate(ModelMatrix, ModelMatrix, [180, 0, 0]);
+
+        let ViewMatrix = mat4.create();
+        mat4.identity(ViewMatrix);
+        mat4.lookAt(ViewMatrix, [0, 0, 300], [0, 0, -90], [0, 1, 0]);
+        let mvMatrix = mat4.create();
+        mat4.multiply(mvMatrix, ViewMatrix, ModelMatrix);
+
+        let mvpMatrix = mat4.create();
+        mat4.identity(mvpMatrix);
+        mat4.multiply(mvpMatrix, ProjMatrix, mvMatrix);
+        webGL.uniformMatrix4fv(uniformMatrix1, false, mvpMatrix);
+
+        draw();
+      }
+
+      function draw() {
+        webGL.clearColor(0, 0, 0, 1);
+        webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
+        webGL.enable(webGL.DEPTH_TEST);
+        webGL.drawArrays(webGL.TRIANGLES, 0, 9);
+      }
+
+      init();
+    </script>
+</head>
+<body>
+<canvas id='myCanvas' width="1024" height='768'></canvas>
+</body>
+</html>

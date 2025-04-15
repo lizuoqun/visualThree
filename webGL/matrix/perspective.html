@@ -67,6 +67,13 @@
     webGL.useProgram(program);
   }
 
+  let angle = 140;
+
+  setInterval(() => {
+    angle += 1;
+    initBuffer()
+  }, 500);
+
   function initBuffer() {
     let triangleArray = [
       0.0, 70, -40, 1, 1, 0, 0, 1,
@@ -101,7 +108,7 @@
     let ProjMatrix = mat4.create();
     mat4.identity(ProjMatrix);
     //角度小，看到的物体大，角度大，看到的物体小。
-    mat4.perspective(ProjMatrix, 160 * Math.PI / 180, 1, 1, 100); //修改可视域范围
+    mat4.perspective(ProjMatrix, angle * Math.PI / 180, 1, 1, 100); //修改可视域范围
 
     webGL.uniformMatrix4fv(uniformMatrix, false, ProjMatrix);
 
