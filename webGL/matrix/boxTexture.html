@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单的正方形（设置纹理）</title>
+</head>
+<script type="module">
+  import * as mat4 from '../assets/js/gl-matrix/esm/mat4.js';
+
+  let webGL;
+  const projMat4 = mat4.create();
+  let program;
+
+  let vertexString = `
+        attribute vec4 a_position;
+        uniform mat4 u_formMatrix;
+        uniform mat4 proj;
+        attribute vec2 a_outUV;
+        varying vec2 v_inUV;
+        void main(void){
+            gl_Position = u_formMatrix * a_position;
+            v_inUV = a_outUV;
+        }
+        `;
+  let fragmentString = `
+        precision mediump float;
+        uniform sampler2D texture;
+        varying vec2 v_inUV;
+        void main(void){
+          gl_FragColor = texture2D(texture, v_inUV);
+        }
+        `;
+
+  function init() {
+    initWebGL();
+    initShader();
+    initBuffer();
+  }
+
+  let webGLdiv;
+  let angle = 45;
+
+  function initWebGL() {
+    webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+  }
+
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
+
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
+
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
+
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
+
+  let uniformTexture;
+  let texture;
+
+  function initBuffer() {
+
+    //    v6----- v5
+    //   /|      /|
+    //  v1------v0|
+    //  | |     | |
+    //  | |v7---|-|v4
+    //  |/      |/
+    //  v2------v3
+
+    let boxArray = [
+      1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 0, 1, -1, -1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, -1, -1, 1, 1, 0, 0, 1, -1, 1, 1, 1, 0,   //前面
+
+      1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, -1, 1, 1, 0, 0, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 0, 0, 1, -1, -1, 1, 1, 0,  //右
+
+      -1, 1, -1, 1, 1, 1, 1, 1, -1, 1, 0, 1, 1, -1, -1, 1, 0, 0, -1, 1, -1, 1, 1, 1, 1, -1, -1, 1, 0, 0, -1, -1, -1, 1, 1, 0, //后
+
+      -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 0, -1, -1, -1, 1, 0, 0, -1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 0, 0, -1, -1, 1, 1, 1, 0, //左
+
+      -1, 1, -1, 1, 0, 1, -1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, -1, 1, -1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, -1, 1, 1, 1,  //上
+
+      -1, -1, 1, 1, 0, 1, -1, -1, -1, 1, 0, 0, 1, -1, -1, 1, 1, 0, -1, -1, 1, 1, 0, 1, 1, -1, -1, 1, 1, 0, 1, -1, 1, 1, 1, 1  //下
+    ];
+
+
+    let pointPosition = new Float32Array(boxArray);
+    let aPsotion = webGL.getAttribLocation(program, 'a_position');
+    let triangleBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
+    webGL.enableVertexAttribArray(aPsotion);
+    webGL.vertexAttribPointer(aPsotion, 4, webGL.FLOAT, false, 6 * 4, 0);
+
+
+    let attribOutUV = webGL.getAttribLocation(program, 'a_outUV');
+    webGL.enableVertexAttribArray(attribOutUV);
+    webGL.vertexAttribPointer(attribOutUV, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
+
+    let ProjMatrix = mat4.create();
+    mat4.identity(ProjMatrix);
+    //角度小，看到的物体大，角度大，看到的物体小。
+    mat4.perspective(ProjMatrix, angle * Math.PI / 180, webGLdiv.clientWidth / webGLdiv.clientHeight, 1, 1000);    //修改可视域范围
+
+    let uniformMatrix1 = webGL.getUniformLocation(program, 'u_formMatrix');
+
+
+    let ModelMatrix = mat4.create();
+    mat4.identity(ModelMatrix);
+    mat4.translate(ModelMatrix, ModelMatrix, [1, 0, 0]);
+
+    let ViewMatrix = mat4.create();
+    mat4.identity(ViewMatrix);
+    mat4.lookAt(ViewMatrix, [5, 5, 5], [0, 0, 0], [0, 0, 1]);
+
+    let mvMatrix = mat4.create();
+    mat4.identity(mvMatrix);
+    mat4.multiply(mvMatrix, ViewMatrix, ModelMatrix);
+
+    let mvpMatrix = mat4.create();
+    mat4.identity(mvpMatrix);
+    mat4.multiply(mvpMatrix, ProjMatrix, mvMatrix);
+    webGL.uniformMatrix4fv(uniformMatrix1, false, mvpMatrix);
+
+    uniformTexture = webGL.getUniformLocation(program, 'texture');
+    texture = initTexture('../assets/image/box.png');
+  }
+
+  function initTexture(imageFile) {
+    let textureHandle = webGL.createTexture();
+    textureHandle.image = new Image();
+    textureHandle.image.src = imageFile;
+    textureHandle.image.onload = function () {
+      handleLoadedTexture(textureHandle);
+    };
+    return textureHandle;
+  }
+
+
+  function handleLoadedTexture(texture) {
+    webGL.bindTexture(webGL.TEXTURE_2D, texture);
+    webGL.pixelStorei(webGL.UNPACK_FLIP_Y_WEBGL, 666);
+    webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.LINEAR);// 纹理放大方式
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.LINEAR);// 纹理缩小方式
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.CLAMP_TO_EDGE);// 纹理水平填充方式
+    webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_T, webGL.CLAMP_TO_EDGE);// 纹理垂直填充方式
+    draw();
+  }
+
+  function draw() {
+    webGL.clearColor(0, 0, 0, 1);
+    webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
+    webGL.enable(webGL.DEPTH_TEST);
+    webGL.activeTexture(webGL.TEXTURE0);
+    webGL.bindTexture(webGL.TEXTURE_2D, texture);
+    webGL.uniform1i(uniformTexture, 0);
+    webGL.drawArrays(webGL.TRIANGLES, 0, 36);
+  }
+
+  init();
+</script>
+
+
+<body>
+<canvas id="webgl" width="1024" height="768"></canvas>
+</body>
+
+</html>

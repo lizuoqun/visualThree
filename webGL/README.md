@@ -5,7 +5,7 @@
 | 文件/文件夹  | 描述                           |
 |---------|------------------------------|
 | assets  | 存放项目所需的静态资源文件，如模型、图片、js包源码等。 |
-| matrix  | 矩阵变换相关代码案例。                  |
+| matrix  | 矩阵变换、三维世界相关代码案例。             |
 | plane   | 包含与平面相关的代码文件或资源。             |
 | texture | 存放项目所需的纹理文件，如贴图、材质等。         |
 
@@ -13,8 +13,12 @@
 
 | 文件名                     | 描述             |
 |-------------------------|----------------|
+| box.html                | 绘制立方体          |
+| boxColor.html           | 绘制立方体（颜色）      |
 | clockTriangle.html      | 时钟效果案例         |
 | clockTriangleOptim.html | 时钟效果案例（代码优化版）  |
+| depth.html              | 深度测试           |
+| depthConflict.html      | 深度冲突           |
 | effect3d.html           | 三维效果展示         |
 | effect3dDomain.html     | 改变可视域          |
 | effect3dKeyBoard.html   | 视口改变+键盘操控      |

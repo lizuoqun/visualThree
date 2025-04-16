@@ -448,8 +448,8 @@ graph LR
     B --> C(片元着色器)
     隐藏面清除 --> D
     C --> D(深度检测)
-D --> E(颜色缓冲区)
-D <--> F(深度缓冲区)
+    D --> E(颜色缓冲区)
+    D <--> F(深度缓冲区)
 ```
 
 那么只要调整一下draw方法即可
@@ -471,3 +471,166 @@ function draw() {
 
 - 启用多边形偏移：gl.enable(gl.POLYGON_OFFSET_FILL);
 - 指定计算偏移量的系数和常量：gl.polygonOffset(factor, units);
+
+## 正方体
+
+### 绘制简单的正方体
+
+在前面学习当中绘制正方形的话，那就是绘制两个三角形，将三角形拼接成一个正方形。先来看一下怎么取到正方体8个顶点的坐标。
+
+> 补充：在三角形的顶点连接顺序，是逆时针的。这个是WebGL
+> 的默认设置，当顶点顺序为逆时针时，这个平面代表正面，顺时针为背面。WebGL有一个背面剔除的功能，开启此功能之后，背面是不会被绘制的。这个能力主要是在绘制3D物体时使用，对性能有一定的优化作用。
+
+那么我们以0,0,0位于正方体的中心，每边都是1的距离，那么就可以得到整个正方体当中的三角形的顶点位置
+
+```js
+let boxArray = [
+  1, 1, 1, 1, -1, 1, 1, 1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, 1, 1, 1, -1, 1, 1,   // 前面
+
+  1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, 1, 1, 1, -1, -1, 1,  // 右
+
+  -1, 1, -1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, // 后
+
+  -1, 1, 1, 1, -1, 1, -1, 1, -1, -1, -1, 1, -1, 1, 1, 1, -1, -1, -1, 1, -1, -1, 1, 1, // 左
+
+  -1, 1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1,  // 上
+
+  -1, -1, 1, 1, -1, -1, -1, 1, 1, -1, -1, 1, -1, -1, 1, 1, 1, -1, -1, 1, 1, -1, 1, 1  // 下
+];
+```
+
+得到了顶点坐标之后进行绘制三角形，并且加上透视投影的效果，这样一个正方体就绘制完成了。
+
+### 设置颜色
+
+在前面已经了解到了通过varying来进行颜色传递，先修改着色器
+
+```js
+let vertexString = `
+  attribute vec4 a_position;
+  uniform mat4 u_formMatrix;
+  uniform mat4 proj;
+  attribute vec4 a_color;
+  varying vec4 color;
+  void main(void){
+    gl_Position = u_formMatrix * a_position;
+    color = a_color;
+  }`;
+let fragmentString = `
+  precision mediump float;
+  varying vec4 color;
+  void main(){
+    gl_FragColor = color;
+  }`;
+```
+
+而后就是调整数组的内容了，原本是一个面6个点，那么要在每一个点后面加上一个颜色值，那么简单随便调整一下array
+
+```js
+    let boxArray = [
+      1, 1, 1, 1, 0.4, 1.0, 1.0, 1.0, -1, 1, 1, 1, 0.4, 1.0, 1.0, 1.0, -1, -1, 1, 1, 1.0, 1.0, 1.0, 1.0, 1, 1, 1, 1, 1.0, 1.0, 1.0, 1.0, -1, -1, 1, 1, 1.0, 1.0, 1.0, 1.0, 1, -1, 1, 1, 1.0, 1.0, 1.0, 1.0,  //前面
+
+      1, 1, -1, 1, 0.4, 0.0, 1.0, 1.0, 1, 1, 1, 1, 0.0, 1.0, 1.0, 1.0, 1, -1, 1, 1, 0.0, 1.0, 1.0, 1.0, 1, 1, -1, 1, 0.0, 1.0, 1.0, 1.0, 1, -1, 1, 1, 0.0, 1.0, 1.0, 1.0, 1, -1, -1, 1, 0.0, 1.0, 1.0, 1.0, //右
+
+      -1, 1, -1, 1, 1.0, 0.0, 0.0, 1.0, 1, 1, -1, 1, 1.0, 0.0, 0.0, 1.0, 1, -1, -1, 1, 1.0, 0.0, 0.0, 1.0, -1, 1, -1, 1, 1.0, 0.0, 0.0, 1.0, 1, -1, -1, 1, 1.0, 0.0, 0.0, 1.0, -1, -1, -1, 1, 1.0, 0.0, 0.0, 1.0,//后
+
+      -1, 1, 1, 1, 1.0, 1.0, 1, 1.0, -1, 1, -1, 1, 1.0, 1.0, 1, 1.0, -1, -1, -1, 1, 1.0, 1.0, 1, 1.0, -1, 1, 1, 1, 1.0, 1.0, 1, 1.0, -1, -1, -1, 1, 1.0, 1.0, 1, 1.0, -1, -1, 1, 1, 1.0, 1.0, 1, 1.0,//左
+
+      -1, 1, -1, 1, 0.0, 1.0, 1.0, 1.0, -1, 1, 1, 1, 0.0, 1.0, 1.0, 1.0, 1, 1, 1, 1, 0.0, 1.0, 1.0, 1.0, -1, 1, -1, 1, 0.0, 1.0, 1.0, 1.0, 1, 1, 1, 1, 0.0, 1.0, 1.0, 1.0, 1, 1, -1, 1, 0.0, 1.0, 1.0, 1.0, //上
+
+      -1, -1, 1, 1, 1.0, 1.0, 0, 1.0, -1, -1, -1, 1, 1.0, 1.0, 0, 1.0, 1, -1, -1, 1, 1.0, 1.0, 0, 1.0, -1, -1, 1, 1, 1.0, 1.0, 0, 1.0, 1, -1, -1, 1, 1.0, 1.0, 0, 1.0, 1, -1, 1, 1, 1.0, 1.0, 0, 1.0 //下
+    ];
+```
+
+最后使用同样的方法进行设置颜色传递，这样也就完成了颜色自定义
+
+```js
+let aColor = webGL.getAttribLocation(program, 'a_color');
+webGL.enableVertexAttribArray(aColor);
+webGL.vertexAttribPointer(aColor, 4, webGL.FLOAT, false, 8 * 4, 4 * 4);
+```
+
+### 设置纹理
+
+同样的，在前面已经了解了怎么设置纹理，这里简单过一遍，先需要在着色器当中接收一个UV坐标，是对应三角形的UV值，然后需要传递一个texture纹理对象，将纹理对象和UV值进行合并就完成了纹理渲染
+
+```js
+let vertexString = `
+  attribute vec4 a_position;
+  uniform mat4 u_formMatrix;
+  uniform mat4 proj;
+  attribute vec2 a_outUV;
+  varying vec2 v_inUV;
+  void main(void){
+    gl_Position = u_formMatrix * a_position;
+    v_inUV = a_outUV;
+  }`;
+let fragmentString = `
+  precision mediump float;
+  uniform sampler2D texture;
+  varying vec2 v_inUV;
+  void main(){
+    gl_FragColor = texture2D(texture, v_inUV);
+  }`;
+```
+在这个着色器当中，我们接收了一个UV坐标，这个坐标就是对应三角形的UV值，然后通过vertexAttribPointer将UV坐标传递给到着色器，这样就剩下一个texture对象没有传递了
+```js
+    let boxArray = [
+      1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 0, 1, -1, -1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, -1, -1, 1, 1, 0, 0, 1, -1, 1, 1, 1, 0,   //前面
+
+      1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, -1, 1, 1, 0, 0, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, 0, 0, 1, -1, -1, 1, 1, 0,  //右
+
+      -1, 1, -1, 1, 1, 1, 1, 1, -1, 1, 0, 1, 1, -1, -1, 1, 0, 0, -1, 1, -1, 1, 1, 1, 1, -1, -1, 1, 0, 0, -1, -1, -1, 1, 1, 0, //后
+
+      -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 0, -1, -1, -1, 1, 0, 0, -1, 1, 1, 1, 1, 1, -1, -1, -1, 1, 0, 0, -1, -1, 1, 1, 1, 0, //左
+
+      -1, 1, -1, 1, 0, 1, -1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, -1, 1, -1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, -1, 1, 1, 1,  //上
+
+      -1, -1, 1, 1, 0, 1, -1, -1, -1, 1, 0, 0, 1, -1, -1, 1, 1, 0, -1, -1, 1, 1, 0, 1, 1, -1, -1, 1, 1, 0, 1, -1, 1, 1, 1, 1  //下
+    ];
+
+let attribOutUV = webGL.getAttribLocation(program, 'a_outUV');
+webGL.enableVertexAttribArray(attribOutUV);
+webGL.vertexAttribPointer(attribOutUV, 2, webGL.FLOAT, false, 6 * 4, 4 * 4);
+```
+
+传递texture对象，和前面设置纹理的代码是一样的。
+
+```js
+let uniformTexture = webGL.getUniformLocation(program, 'texture');
+let texture = initTexture('../assets/image/box.png');
+
+function initTexture(imageFile) {
+  let textureHandle = webGL.createTexture();
+  textureHandle.image = new Image();
+  textureHandle.image.src = imageFile;
+  textureHandle.image.onload = function () {
+    handleLoadedTexture(textureHandle);
+  };
+  return textureHandle;
+}
+
+function handleLoadedTexture(texture) {
+  webGL.bindTexture(webGL.TEXTURE_2D, texture);
+  webGL.pixelStorei(webGL.UNPACK_FLIP_Y_WEBGL, 666);
+  webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
+  webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.LINEAR);// 纹理放大方式
+  webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.LINEAR);// 纹理缩小方式
+  webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.CLAMP_TO_EDGE);// 纹理水平填充方式
+  webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_T, webGL.CLAMP_TO_EDGE);// 纹理垂直填充方式
+  draw();
+}
+
+function draw() {
+  webGL.clearColor(0, 0, 0, 1);
+  webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
+  webGL.enable(webGL.DEPTH_TEST);
+  webGL.activeTexture(webGL.TEXTURE0);
+  webGL.bindTexture(webGL.TEXTURE_2D, texture);
+  webGL.uniform1i(uniformTexture, 0);
+  webGL.drawArrays(webGL.TRIANGLES, 0, 36);
+}
+```
+
+### 正方体运动
+
