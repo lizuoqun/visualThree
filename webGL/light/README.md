@@ -91,3 +91,142 @@
 
 ### 平行光案例
 
+补充：前面都是采用drawArray方法绘制的正方体，这样的话数组对象太多内容了，看的头都晕了，还可以采用drawElements对前面的代码进行重构优化一下。
+
+数据对象可以进行一个拆分。boxArray数组表示的是每一个面的四个顶点的坐标位置，以第一行为例，就是从v0-v1-v2-v3的位置。那么对应的index就表示顶点位置的索引（因为一个正方形要拆分成两个三角形，这也是这里的index一行为什么是6个数据的原因）。
+
+```js
+    //    v6----- v5
+    //   /|      /|
+    //  v1------v0|
+    //  | |     | |
+    //  | |v7---|-|v4
+    //  |/      |/
+    //  v2------v3
+
+let boxArray = [
+  1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, // v0-v1-v2-v3
+  1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, // v0-v3-v4-v5
+  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, 1.0, // v0-v5-v6-v1
+  -1.0, 1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, // v1-v6-v7-v2
+  -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, // v7-v4-v3-v2
+  1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, 1.0, -1.0, 1.0 // v4-v7-v6-v5
+];
+
+let index = [
+  0, 1, 2, 0, 2, 3,    // front
+  4, 5, 6, 4, 6, 7,    // right
+  8, 9, 10, 8, 10, 11,    // up
+  12, 13, 14, 12, 14, 15,    // left
+  16, 17, 18, 16, 18, 19,    // down
+  20, 21, 22, 20, 22, 23     // back
+];
+
+```
+
+后面进行数据组合的方法和之前是一样的。注意一下绑定的着色器的变量即可，以及最后drawElements方法，
+
+```js
+let pointPosition = new Float32Array(boxArray);
+let aPsotion = webGL.getAttribLocation(program, 'a_position');
+let triangleBuffer = webGL.createBuffer();
+webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
+webGL.enableVertexAttribArray(aPsotion);
+webGL.vertexAttribPointer(aPsotion, 4, webGL.FLOAT, false, 4 * 4, 0);
+
+let indexBuffer = webGL.createBuffer();
+let indices = new Uint8Array(index);
+webGL.bindBuffer(webGL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+webGL.bufferData(webGL.ELEMENT_ARRAY_BUFFER, indices, webGL.STATIC_DRAW);
+
+webGL.drawElements(webGL.TRIANGLES, 36, webGL.UNSIGNED_BYTE, 0);
+```
+
+平行光案例实现：调整着色器代码，看一下整个着色器代码调整的完整流程。
+
+```mermaid
+graph TB
+    subgraph 顶点着色器 by modify
+        A(顶点坐标 a_position)
+        B(透视投影 u_formMatrix)
+        C(法向量 a_Normal)
+        D(光照方向 u_LightDirection)
+        E(漫射光 u_DiffuseLight)
+        F(环境光 u_AmbientLight)
+        G(颜色 v_Color)
+    end
+
+    subgraph 片元着色器
+        Z(v_Color)
+    end
+
+    C --> C1(归一化法向量 normalize)
+    D --> D1(归一化光线方向 normalize)
+    C1 -- dot计算点积、max取最大值 --> H(法向量与光线方向的点积)
+    D1 --> H
+    E --> I(计算漫反射颜色)
+    H --> I
+    F --> F1(计算环境光颜色)
+    F1 -- 相加 --> J(颜色合并)
+    I -- 相加 --> J
+    G -- 利用varying变量传值 --> 片元着色器
+    J --> 片元着色器
+
+```
+
+通过这个流程图也就结合了前面计算漫反射公式得到了漫反射的颜色，所以最后在片元着色器中利用varying变量传值，进行颜色合并。那么也就渲染到了物体上。
+
+```js
+  let vertexString = `
+  attribute vec4 a_position;
+  uniform mat4 u_formMatrix;
+  attribute vec4 a_Normal;
+  uniform vec3 u_LightDirection;
+  uniform vec3 u_DiffuseLight;
+  uniform vec3 u_AmbientLight;
+  varying vec4 v_Color;
+  void main(void){
+    gl_Position = u_formMatrix * a_position;
+    vec3 normal = normalize(a_Normal.xyz);
+    vec3 LightDirection = normalize(u_LightDirection.xyz);
+    float nDotL = max(dot(LightDirection, normal), 0.0);
+    vec3 diffuse = u_DiffuseLight * vec3(1.0,0,1.0)* nDotL;
+    vec3 ambient = u_AmbientLight * vec3(1.0,0,1.0);
+    v_Color = vec4(diffuse + ambient, 1);
+  }`;
+let fragmentString = `
+  precision mediump float;
+  varying vec4 v_Color;
+  void main(void){
+    gl_FragColor =v_Color;
+  }
+  `;
+```
+
+第二步就是设置法向量和光线方向，以及漫反射和环境光。而后结合前面的通过drawElements进行绘制。那也就完成了平行光案例。
+
+```js
+let normals = new Float32Array([
+  0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,  // v0-v1-v2-v3 front
+  1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,  // v0-v3-v4-v5 right
+  0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,  // v0-v5-v6-v1 up
+  -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,  // v1-v6-v7-v2 left
+  0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0,  // v7-v4-v3-v2 down
+  0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0   // v4-v7-v6-v5 back
+]);
+let aNormal = webGL.getAttribLocation(program, 'a_Normal');
+let normalsBuffer = webGL.createBuffer();
+let normalsArr = new Float32Array(normals);
+webGL.bindBuffer(webGL.ARRAY_BUFFER, normalsBuffer);
+webGL.bufferData(webGL.ARRAY_BUFFER, normalsArr, webGL.STATIC_DRAW);
+webGL.enableVertexAttribArray(aNormal);
+webGL.vertexAttribPointer(aNormal, 3, webGL.FLOAT, false, 3 * 4, 0);
+
+let u_DiffuseLight = webGL.getUniformLocation(program, 'u_DiffuseLight');
+webGL.uniform3f(u_DiffuseLight, 1.0, 1.0, 1.0);
+let u_LightDirection = webGL.getUniformLocation(program, 'u_LightDirection');
+webGL.uniform3fv(u_LightDirection, [0, 0, 10.0]);
+let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
+webGL.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2);
+```

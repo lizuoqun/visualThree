@@ -14,20 +14,21 @@
 
 ## matrix 文件夹
 
-| 文件名                     | 描述             |
-|-------------------------|----------------|
-| box.html                | 绘制立方体          |
-| boxColor.html           | 绘制立方体（颜色）      |
-| clockTriangle.html      | 时钟效果案例         |
-| clockTriangleOptim.html | 时钟效果案例（代码优化版）  |
-| depth.html              | 深度测试           |
-| depthConflict.html      | 深度冲突           |
-| effect3d.html           | 三维效果展示         |
-| effect3dDomain.html     | 改变可视域          |
-| effect3dKeyBoard.html   | 视口改变+键盘操控      |
-| glMatrix-API.html       | glMatrix API案例 |
-| perspective.html        | 透视投影案例         |
-| triangleMatrix.html     | 平面+矩阵变换        |
+| 文件名                     | 描述                   |
+|-------------------------|----------------------|
+| box.html                | 绘制立方体                |
+| boxByElement.html       | 用drawElements方法绘制立方体 |
+| boxColor.html           | 绘制立方体（颜色）            |
+| clockTriangle.html      | 时钟效果案例               |
+| clockTriangleOptim.html | 时钟效果案例（代码优化版）        |
+| depth.html              | 深度测试                 |
+| depthConflict.html      | 深度冲突                 |
+| effect3d.html           | 三维效果展示               |
+| effect3dDomain.html     | 改变可视域                |
+| effect3dKeyBoard.html   | 视口改变+键盘操控            |
+| glMatrix-API.html       | glMatrix API案例       |
+| perspective.html        | 透视投影案例               |
+| triangleMatrix.html     | 平面+矩阵变换              |
 
 ## plane 文件夹
 
