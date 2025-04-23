@@ -164,6 +164,7 @@
     let ModelMatrix = mat4.create();
     mat4.identity(ModelMatrix);
     mat4.translate(ModelMatrix, ModelMatrix, [0, 0, 0]);
+    mat4.rotate(ModelMatrix, ModelMatrix, rotateY * Math.PI / 180, [0, 0, 1]);
 
     let ViewMatrix = mat4.create();
     mat4.identity(ViewMatrix);
@@ -180,6 +181,14 @@
 
     draw();
   }
+
+  let rotateX = 0;
+  let rotateY = 0;
+  setInterval(function () {
+    rotateX += 1;
+    rotateY += 1;
+    initBuffer();
+  }, 1000 / 60);
 
   function draw() {
     webGL.clearColor(0, 0, 0, 1);
