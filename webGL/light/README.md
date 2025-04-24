@@ -230,3 +230,10 @@ webGL.uniform3fv(u_LightDirection, [0, 0, 10.0]);
 let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
 webGL.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2);
 ```
+### 点光源案例
+
+> 漫反射光颜色 = 入射光颜色 * 表面基底色 * cos A
+> 
+> cos A = 光线方向 * 法线方向
+
+在点光源是没有光照方向的，光照方向需要通过光源位置-顶点位置来计算。两者相减就会得到入射光方向向量
