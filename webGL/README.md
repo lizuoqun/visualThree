@@ -12,6 +12,12 @@
 
 ## light 文件夹
 
+| 文件名              | 描述    |
+|------------------|-------|
+| directLight.html | 直射光案例 |
+| pointLight.html  | 点光源案例 |
+| envLight.html    | 环境光案例 |
+
 ## matrix 文件夹
 
 | 文件名                     | 描述                   |

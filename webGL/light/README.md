@@ -89,7 +89,7 @@
 | (1.0,1.0,1.0) 白色 | (1.0,0,0)红色 | 0  | 1.0   | R=(1 * 1 * 1)<br/>G=(1 * 0 * 1)<br/>B=(1 * 0 * 1) | (1,0,0) |
 | (1.0,1.0,1.0) 白色 | (1.0,0,0)红色 | 90 | 0     | R=(1 * 1 * 0)<br/>G=(1 * 0 * 0)<br/>B=(1 * 0 * 0) | (0,0,0) |
 
-### 平行光案例
+### 平行光
 
 补充：前面都是采用drawArray方法绘制的正方体，这样的话数组对象太多内容了，看的头都晕了，还可以采用drawElements对前面的代码进行重构优化一下。
 
@@ -178,7 +178,7 @@ graph TB
 通过这个流程图也就结合了前面计算漫反射公式得到了漫反射的颜色，所以最后在片元着色器中利用varying变量传值，进行颜色合并。那么也就渲染到了物体上。
 
 ```js
-  let vertexString = `
+let vertexString = `
   attribute vec4 a_position;
   uniform mat4 u_formMatrix;
   attribute vec4 a_Normal;
@@ -230,10 +230,76 @@ webGL.uniform3fv(u_LightDirection, [0, 0, 10.0]);
 let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
 webGL.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2);
 ```
-### 点光源案例
+
+### 点光源
 
 > 漫反射光颜色 = 入射光颜色 * 表面基底色 * cos A
-> 
+>
 > cos A = 光线方向 * 法线方向
 
-在点光源是没有光照方向的，光照方向需要通过光源位置-顶点位置来计算。两者相减就会得到入射光方向向量
+在点光源是没有光照方向的，光照方向需要通过光源位置-顶点位置来计算。两者相减就会得到入射光方向向量。这样就需要调整一下着色器代码。
+[环境光.html](..%2F..%2F..%2Fwebgl-techer-intermediate%2F16_%BB%B7%BE%B3%B9%E2%2Fcode%2F%BB%B7%BE%B3%B9%E2.html)
+
+- 新增变量：u_PointLightPosition，u_NormalMatrix（法线变换矩阵）
+- 计算normal，将法线向量从模型空间转换到视图空间或世界空间
+- 计算入射光方向向量
+
+```js
+let vertexString = `
+  attribute vec4 a_position;
+  uniform mat4 u_formMatrix;
+  attribute vec4 a_Normal;
+  uniform vec3 u_PointLightPosition;
+  uniform vec3 u_DiffuseLight;
+  uniform vec3 u_AmbientLight;
+  varying vec4 v_Color;
+  uniform mat4 u_NormalMatrix;
+  void main(void){
+    gl_Position = u_formMatrix * a_position;
+    vec3 normal = normalize(vec3(u_NormalMatrix * a_Normal));
+    vec3 LightDirection = normalize(vec3(gl_Position.xyz) - u_PointLightPosition);
+    float nDotL = max(dot(LightDirection, normal), 0.0);
+    vec3 diffuse = u_DiffuseLight * vec3(1.0,0,1.0)* nDotL;
+    vec3 ambient = u_AmbientLight * vec3(1.0,0,1.0);
+    v_Color = vec4(diffuse + ambient, 1);
+  }`;
+```
+
+接着就是在js当中设置u_PointLightPosition，u_NormalMatrix。
+
+```js
+let u_PointLightPosition = webGL.getUniformLocation(program, 'u_PointLightPosition');
+webGL.uniform3fv(u_PointLightPosition, [10, 0, 0]);
+
+let uniformNormalMatrix = webGL.getUniformLocation(program, 'u_NormalMatrix');
+let normalMatrix = mat4.create();
+mat4.identity(normalMatrix);
+mat4.invert(normalMatrix, ModelMatrix);
+mat4.transpose(normalMatrix, ModelMatrix);
+webGL.uniformMatrix4fv(uniformNormalMatrix, false, normalMatrix);
+```
+
+### 环境光
+
+环境光相对于平行光和点光源来说，相对简单些，不用再去计算漫反射光了，只需要计算环境光。那么其着色器代码调整如下：只需要传递一个环境光进来，然后直接和基底色相乘就是渲染后的颜色了。
+
+```js
+let vertexString = `
+  attribute vec4 a_position;
+  uniform mat4 u_formMatrix;
+  uniform vec3 u_AmbientLight;
+  varying vec4 v_Color;
+  void main(void){
+    gl_Position = u_formMatrix * a_position;
+    vec3 ambient = u_AmbientLight * vec3(1.0,1.0,1.0);
+    v_Color = vec4(ambient, 1);
+  }`;
+```
+
+传值也将其他的都进行删去，设置u_AmbientLight即可。那么这里的值就是（0.8,0.1,0）颜色值就是 (255*0.8, 255*0, 255*0.1) = (
+204,0,51) 橙红色。
+
+```js
+let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
+webGL.uniform3f(u_AmbientLight, 0.8, 0.1, 0);
+```

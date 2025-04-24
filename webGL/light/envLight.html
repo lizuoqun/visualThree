@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>点光源</title>
+    <title>环境光</title>
 </head>
 <script type="module">
   import * as mat4 from '../assets/js/gl-matrix/esm/mat4.js';
@@ -14,23 +14,15 @@
   let program;
 
   let vertexString = `
-        attribute vec4 a_position;
+    attribute vec4 a_position;
         uniform mat4 u_formMatrix;
-        attribute vec4 a_Normal;
-        uniform vec3 u_PointLightPosition;
-        uniform vec3 u_DiffuseLight;
         uniform vec3 u_AmbientLight;
         varying vec4 v_Color;
-        uniform mat4 u_NormalMatrix;
         void main(void){
         gl_Position = u_formMatrix * a_position;
-        vec3 normal = normalize(vec3(u_NormalMatrix * a_Normal));
-        vec3 LightDirection = normalize(u_PointLightPosition - vec3(gl_Position.xyz));
-        float nDotL = max(dot(LightDirection, normal), 0.0);
-        vec3 diffuse = u_DiffuseLight * vec3(1.0,0,1.0) * nDotL;
-        vec3 ambient = u_AmbientLight * vec3(1.0,0,1.0);
-        v_Color = vec4(diffuse + ambient, 1);}
-        `;
+        vec3 ambient = u_AmbientLight * vec3(1.0,1.0,1.0);
+        v_Color = vec4(ambient, 1);
+        }`;
   let fragmentString = `
         precision mediump float;
         varying vec4 v_Color;
@@ -90,7 +82,7 @@
 
   function initBuffer() {
 
-    //    v6----- v5
+    //    v6-----v5
     //   /|      /|
     //  v1------v0|
     //  | |     | |
@@ -130,29 +122,9 @@
     webGL.bindBuffer(webGL.ELEMENT_ARRAY_BUFFER, indexBuffer);
     webGL.bufferData(webGL.ELEMENT_ARRAY_BUFFER, indices, webGL.STATIC_DRAW);
 
-
-    let normals = new Float32Array([
-      0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,  // v0-v1-v2-v3 front
-      1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,  // v0-v3-v4-v5 right
-      0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,  // v0-v5-v6-v1 up
-      -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,  // v1-v6-v7-v2 left
-      0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0,  // v7-v4-v3-v2 down
-      0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0   // v4-v7-v6-v5 back
-    ]);
-    let aNormal = webGL.getAttribLocation(program, 'a_Normal');
-    let normalsBuffer = webGL.createBuffer();
-    let normalsArr = new Float32Array(normals);
-    webGL.bindBuffer(webGL.ARRAY_BUFFER, normalsBuffer);
-    webGL.bufferData(webGL.ARRAY_BUFFER, normalsArr, webGL.STATIC_DRAW);
-    webGL.enableVertexAttribArray(aNormal);
-    webGL.vertexAttribPointer(aNormal, 3, webGL.FLOAT, false, 3 * 4, 0);
-
-    let u_DiffuseLight = webGL.getUniformLocation(program, 'u_DiffuseLight');
-    webGL.uniform3f(u_DiffuseLight, 1.0, 1.0, 1.0);
-    let u_PointLightPosition = webGL.getUniformLocation(program, 'u_PointLightPosition');
-    webGL.uniform3fv(u_PointLightPosition, [1, 1, 1]);
     let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
-    webGL.uniform3f(u_AmbientLight, 0.5, 0.5, 0.5);
+    webGL.uniform3f(u_AmbientLight, 0.8, 0.1, 0);
+
 
     let ProjMatrix = mat4.create();
     mat4.identity(ProjMatrix);
@@ -164,11 +136,11 @@
     let ModelMatrix = mat4.create();
     mat4.identity(ModelMatrix);
     mat4.translate(ModelMatrix, ModelMatrix, [0, 0, 0]);
-    // mat4.rotate(ModelMatrix, ModelMatrix, rotateY * Math.PI / 180, [0, 0, 1]);
 
     let ViewMatrix = mat4.create();
     mat4.identity(ViewMatrix);
     mat4.lookAt(ViewMatrix, [5, 5, 5], [0, 0, 0], [0, 0, 1]);
+    // mat4.rotate(ViewMatrix, ViewMatrix, rotateY * Math.PI / 180, [0, 0, 1]);
 
     let mvMatrix = mat4.create();
     mat4.identity(mvMatrix);
@@ -178,13 +150,6 @@
     mat4.identity(mvpMatrix);
     mat4.multiply(mvpMatrix, ProjMatrix, mvMatrix);
     webGL.uniformMatrix4fv(uniformMatrix1, false, mvpMatrix);
-
-    let uniformNormalMatrix = webGL.getUniformLocation(program, 'u_NormalMatrix');
-    let normalMatrix = mat4.create();
-    mat4.identity(normalMatrix);
-    mat4.invert(normalMatrix, ModelMatrix);
-    mat4.transpose(normalMatrix, ModelMatrix);
-    webGL.uniformMatrix4fv(uniformNormalMatrix, false, normalMatrix);
 
     draw();
   }
