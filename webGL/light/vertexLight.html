@@ -1,0 +1,214 @@
+<!--
+ * @Descripttion: 
+ * @version: 
+ * @Author: Jsonco
+ * @Date: 2022-05-25 19:54:25
+ * @LastEditors: sueRimn
+ * @LastEditTime: 2022-07-14 20:34:48
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="module">
+      import * as mat4 from '../assets/js/gl-matrix/esm/mat4.js';
+
+      let vertexString = `
+        attribute vec4 a_position;
+        uniform mat4 u_formMatrix;
+        attribute vec4 a_Normal;
+        uniform vec3 u_PointLightPosition;
+        uniform vec3 u_DiffuseLight;
+        uniform vec3 u_AmbientLight;
+        varying vec4 v_Color;
+        void main(void){
+        gl_Position = u_formMatrix * a_position;
+        vec3 normal = normalize(a_Normal.xyz);
+        vec3 lightDirection = normalize(u_PointLightPosition - vec3(gl_Position.xyz));
+        float nDotL = max(dot(lightDirection, normal), 0.0);
+        vec3 diffuse = u_DiffuseLight * vec3(1.0,0,1.0)* nDotL;
+        vec3 ambient = u_AmbientLight * vec3(1.0,0,1.0);
+        v_Color = vec4(diffuse + ambient, 1);
+        }
+        `;
+      let fragmentString = `
+        precision mediump float;
+        varying vec4 v_Color;
+        void main(void){
+          gl_FragColor =v_Color;
+        }
+        `;
+
+      var webGL;
+      var angle = 45;
+      var webglDiv;
+
+      function init() {
+        initWebgl();
+        initShader();
+        initBuffer();
+        draw();
+      }
+
+      function initWebgl() {
+        webglDiv = document.getElementById('myCanvas');
+        webGL = webglDiv.getContext('webgl');
+        webGL.viewport(0, 0, webglDiv.clientWidth, webglDiv.clientHeight);
+
+      }
+
+      function initShader() {
+
+        let vsshader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsshader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+        webGL.shaderSource(vsshader, vertexString);
+        webGL.shaderSource(fsshader, fragmentString);
+
+        webGL.compileShader(vsshader);
+        webGL.compileShader(fsshader);
+        if (!webGL.getShaderParameter(vsshader, webGL.COMPILE_STATUS)) {
+          let err = webGL.getShaderInfoLog(vsshader);
+          console.log(' =====', err);
+          return;
+        }
+        if (!webGL.getShaderParameter(fsshader, webGL.COMPILE_STATUS)) {
+          let err = webGL.getShaderInfoLog(fsshader);
+          console.log(' =====', err);
+          return;
+        }
+        let program = webGL.createProgram();
+        webGL.attachShader(program, vsshader);
+        webGL.attachShader(program, fsshader);
+        webGL.linkProgram(program);
+        webGL.useProgram(program);
+        webGL.program = program;
+
+      }
+
+      var positions = [];
+      var indices = [];
+
+      function initBuffer() {
+
+        var SPHERE_DIV = 10;
+
+        var i, ai, si, ci;
+        var j, aj, sj, cj;
+        var p1, p2;
+
+
+        // Generate coordinates
+        for (j = 0; j <= SPHERE_DIV; j++) {
+          aj = j * Math.PI / SPHERE_DIV;
+          sj = Math.sin(aj);
+          cj = Math.cos(aj);
+          for (i = 0; i <= SPHERE_DIV; i++) {
+            ai = i * 2 * Math.PI / SPHERE_DIV;
+            si = Math.sin(ai);
+            ci = Math.cos(ai);
+
+            positions.push(ci * sj);  // X
+            positions.push(cj);       // Y
+            positions.push(si * sj);  // Z
+          }
+        }
+
+
+        console.log(' =====', positions);
+
+        for (j = 0; j < SPHERE_DIV; j++) {
+          for (i = 0; i < SPHERE_DIV; i++) {
+            p1 = j * (SPHERE_DIV + 1) + i;
+            p2 = p1 + (SPHERE_DIV + 1);
+
+            indices.push(p1);
+            indices.push(p2);
+            indices.push(p1 + 1);
+
+            indices.push(p1 + 1);
+            indices.push(p2);
+            indices.push(p2 + 1);
+          }
+        }
+
+
+        let pointPosition = new Float32Array(positions);
+        let aPsotion = webGL.getAttribLocation(webGL.program, 'a_position');
+        let triangleBuffer = webGL.createBuffer();
+        webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+        webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
+        webGL.enableVertexAttribArray(aPsotion);
+        webGL.vertexAttribPointer(aPsotion, 3, webGL.FLOAT, false, 0, 0);
+
+        let aNormal = webGL.getAttribLocation(webGL.program, 'a_Normal');
+        let normalsBuffer = webGL.createBuffer();
+        let normalsArr = new Float32Array(positions);
+        webGL.bindBuffer(webGL.ARRAY_BUFFER, normalsBuffer);
+        webGL.bufferData(webGL.ARRAY_BUFFER, normalsArr, webGL.STATIC_DRAW);
+        webGL.enableVertexAttribArray(aNormal);
+        webGL.vertexAttribPointer(aNormal, 3, webGL.FLOAT, false, 0, 0);
+
+        let u_DiffuseLight = webGL.getUniformLocation(webGL.program, 'u_DiffuseLight');
+        webGL.uniform3f(u_DiffuseLight, 1.0, 1.0, 1.0);
+        let u_LightDirection = webGL.getUniformLocation(webGL.program, 'u_PointLightPosition');
+        webGL.uniform3fv(u_LightDirection, [3.0, 3.0, 4.0]);
+        let u_AmbientLight = webGL.getUniformLocation(webGL.program, 'u_AmbientLight');
+        webGL.uniform3f(u_AmbientLight, 0.2, 0., 0.2);
+
+
+        let indexBuffer = webGL.createBuffer();
+        let indices1 = new Uint8Array(indices);
+        webGL.bindBuffer(webGL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        webGL.bufferData(webGL.ELEMENT_ARRAY_BUFFER, indices1, webGL.STATIC_DRAW);
+
+
+        //矩阵变换
+        let ProjMatrix = mat4.create();
+        mat4.identity(ProjMatrix);
+        //角度小，看到的物体大，角度大，看到的物体小。
+        mat4.perspective(ProjMatrix, angle * Math.PI / 180, webglDiv.clientWidth / webglDiv.clientHeight, 1, 1000);    //修改可视域范围
+
+        let uniformMatrix1 = webGL.getUniformLocation(webGL.program, 'u_formMatrix');
+
+        let ModelMatrix = mat4.create();
+        mat4.identity(ModelMatrix);
+        mat4.translate(ModelMatrix, ModelMatrix, [0, 0, 0]);
+
+        let ViewMatrix = mat4.create();
+        mat4.identity(ViewMatrix);
+        mat4.lookAt(ViewMatrix, [3, 3, 7], [0, 0, 0], [0, 1, 0]);
+
+        let mvMatrix = mat4.create();
+        mat4.identity(mvMatrix);
+        mat4.multiply(mvMatrix, ViewMatrix, ModelMatrix);
+
+        let mvpMatrix = mat4.create();
+        mat4.identity(mvpMatrix);
+        mat4.multiply(mvpMatrix, ProjMatrix, mvMatrix);
+        webGL.uniformMatrix4fv(uniformMatrix1, false, mvpMatrix);
+      }
+
+      function draw() {
+        webGL.clearColor(0, 0, 0, 1);
+        webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
+        webGL.enable(webGL.DEPTH_TEST);
+
+        // webGL.drawArrays(webGL.TRIANGLES, 0, positions.length / 3);
+        webGL.drawElements(webGL.TRIANGLES, indices.length, webGL.UNSIGNED_BYTE, 0);
+      }
+
+      init();
+    </script>
+</head>
+
+<body>
+<canvas id='myCanvas' width="1024" height='768'></canvas>
+<div id="text"></div>
+</body>
+
+</html>

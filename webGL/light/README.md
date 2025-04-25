@@ -89,7 +89,7 @@
 | (1.0,1.0,1.0) 白色 | (1.0,0,0)红色 | 0  | 1.0   | R=(1 * 1 * 1)<br/>G=(1 * 0 * 1)<br/>B=(1 * 0 * 1) | (1,0,0) |
 | (1.0,1.0,1.0) 白色 | (1.0,0,0)红色 | 90 | 0     | R=(1 * 1 * 0)<br/>G=(1 * 0 * 0)<br/>B=(1 * 0 * 0) | (0,0,0) |
 
-### 平行光
+### 平行光案例
 
 补充：前面都是采用drawArray方法绘制的正方体，这样的话数组对象太多内容了，看的头都晕了，还可以采用drawElements对前面的代码进行重构优化一下。
 
@@ -231,14 +231,13 @@ let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
 webGL.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2);
 ```
 
-### 点光源
+## 点光源
 
 > 漫反射光颜色 = 入射光颜色 * 表面基底色 * cos A
 >
 > cos A = 光线方向 * 法线方向
 
 在点光源是没有光照方向的，光照方向需要通过光源位置-顶点位置来计算。两者相减就会得到入射光方向向量。这样就需要调整一下着色器代码。
-[环境光.html](..%2F..%2F..%2Fwebgl-techer-intermediate%2F16_%BB%B7%BE%B3%B9%E2%2Fcode%2F%BB%B7%BE%B3%B9%E2.html)
 
 - 新增变量：u_PointLightPosition，u_NormalMatrix（法线变换矩阵）
 - 计算normal，将法线向量从模型空间转换到视图空间或世界空间
@@ -279,7 +278,7 @@ mat4.transpose(normalMatrix, ModelMatrix);
 webGL.uniformMatrix4fv(uniformNormalMatrix, false, normalMatrix);
 ```
 
-### 环境光
+## 环境光
 
 环境光相对于平行光和点光源来说，相对简单些，不用再去计算漫反射光了，只需要计算环境光。那么其着色器代码调整如下：只需要传递一个环境光进来，然后直接和基底色相乘就是渲染后的颜色了。
 
@@ -302,4 +301,129 @@ let vertexString = `
 ```js
 let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
 webGL.uniform3f(u_AmbientLight, 0.8, 0.1, 0);
+```
+
+## 逐片元光照
+
+再来先回顾一下webGL整个渲染的流程
+
+```mermaid
+graph LR
+    A(js) --> B(缓冲区对象) --> C(顶点着色器) --> D(顶点坐标) --> E(图形装配) --> F(光栅化) --> G(片元着色器) --> H(浏览器)
+```
+
+### 逐顶点着色
+
+在逐顶点渲染中，前面讲的光照或颜色的计算是在顶点着色器中进行的，顶点着色器运行结束后，每一个顶点都有一个颜色值，在片元着色器执行前，webGL会对这些顶点的颜色数据进行线性插值，从而得到每个片元处的颜色。这就是webGL绘制三角形的原理，为什么只给了3个顶点的颜色值就能得到一个彩色的三角形的缘故，即三角形中其他点(
+片元)的颜色值都是通过这给定的3个顶点的颜色值通过线性插值得到的。
+
+### 逐片元着色
+
+每个像素都被填充了光栅化处理后的颜色，并写入颜色缓冲区，直到最后一个片元被处理完成，浏览器就会显示出最终的彩色三角形
+
+逐片元的计算光照条件：
+
+- 片元在世界坐标系下的坐标。
+- 片元处表面的法向量。可以在顶点着色器中，将顶点的世界坐标和法向量以varying变量的形式传人片元着色器，片元着色器中的同名变量就已经是内插后的逐片元值了。
+
+### 绘制球
+
+#### 球体任意一点点坐标
+
+在前面绘制立体图形都是长方体这种可以确定具体的顶点坐标，那么绘制球体的时候我们怎么拿到对应的坐标再进行绘制呢？
+
+如下图所示，这是一个球，现在已知半径为r，求球上一点P的坐标，其中该点与中心点连线与z轴的夹角为θ，该点往平面做投影，投影到中心点连线和x轴的夹角为φ。
+
+那么就可以得到p点的xyz坐标：并且现在只需要将φ转360度，θ转180度，即可得到球上任意一点的xyz坐标。
+
+- x=rsinθcosφ
+- y=rsinθsinφ
+- z=rcosθ
+
+#### webGL渲染球体（逐顶点着色）
+
+在webGL当中所有的图形都是通过很多个三角形进行组成的，下面开始计算球体的顶点坐标：也就是将上面的数学公式转成js代码。（在前面所有学习和实现的效果都是采用的逐顶点着色，也就是js将颜色值传递到顶点着色器当中，顶点着色器将所有的颜色都处理好了之后再通过varying传递给片元着色器）
+
+```js
+let positions = [];
+const SPHERE_DIV = 10;
+
+let i, ai, si, ci;
+let j, aj, sj, cj;
+
+
+for (j = 0; j <= SPHERE_DIV; j++) {
+  aj = j * Math.PI / SPHERE_DIV;
+  sj = Math.sin(aj);
+  cj = Math.cos(aj);
+  for (i = 0; i <= SPHERE_DIV; i++) {
+    ai = i * 2 * Math.PI / SPHERE_DIV;
+    si = Math.sin(ai);
+    ci = Math.cos(ai);
+
+    positions.push(ci * sj);  // X
+    positions.push(cj);       // Y
+    positions.push(si * sj);  // Z
+  }
+}
+
+webgl.drawArrays(webgl.TRIANGLES, 0, positions.length / 3);
+```
+
+使用drawArrays进行渲染，直接根据顶点缓冲区的数据顺序绘制。这里的顶点数量不够，因为只计算了一些点，并且这些点没有复用，组成的三角形不能完全覆盖球体，所以就是这种效果
+改用drawElements进行渲染，需要再加上计算点索引的数组的代码。
+
+```js
+let p1, p2;
+
+for (j = 0; j < SPHERE_DIV; j++) {
+  for (i = 0; i < SPHERE_DIV; i++) {
+    p1 = j * (SPHERE_DIV + 1) + i;
+    p2 = p1 + (SPHERE_DIV + 1);
+
+    indices.push(p1);
+    indices.push(p2);
+    indices.push(p1 + 1);
+
+    indices.push(p1 + 1);
+    indices.push(p2);
+    indices.push(p2 + 1);
+  }
+}
+
+webGL.drawElements(webGL.TRIANGLES, indices.length, webGL.UNSIGNED_BYTE, 0);
+```
+
+#### webGL渲染球体（逐片元着色）
+
+逐片元着色和逐顶点着色的区别就是，逐片元着色是在片元着色器中计算光照，逐顶点着色是在顶点着色器中计算光照。那么就调整一下着色器代码
+
+```js
+let vertexString = `
+  attribute vec4 a_position;
+  uniform mat4 u_formMatrix;
+  attribute vec4 a_Normal;
+  varying vec4 v_Normal;
+  varying vec4 v_position;
+  void main(void){
+    gl_Position = u_formMatrix * a_position;
+    v_position = gl_Position;
+    v_Normal= a_Normal;
+  }`;
+let fragmentString = `
+  precision mediump float;
+   
+  varying vec4 v_Normal;
+  varying vec4 v_position;
+  uniform vec3 u_PointLightPosition;
+  uniform vec3 u_DiffuseLight;
+  uniform vec3 u_AmbientLight;
+  void main(void){
+    vec3 normal = normalize(v_Normal.xyz);
+    vec3 lightDirection = normalize(u_PointLightPosition - vec3(v_position.xyz));
+    float nDotL = max(dot(lightDirection, normal), 0.0);
+    vec3 diffuse = u_DiffuseLight * vec3(1.0,0,1.0) * nDotL;
+    vec3 ambient = u_AmbientLight * vec3(1.0,0,1.0);
+    gl_FragColor = vec4(diffuse + ambient, 1);
+  }`;
 ```
