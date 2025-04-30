@@ -182,3 +182,79 @@ function keydown(ev) {
 - 再通过小臂的模型矩阵来绘制手指1和手指2，这样就完成了大臂、小臂、手指的联动。
 
 > **不管他有多少个节点，只要有节点的模型矩阵，就可以通过这个模型矩阵来绘制节点，完成联动。**
+
+## 着色器对象 initShader
+
+在前面已经简单解释了一下initShader是用来干啥的，这个后续都没有做过修改。现在来深入探究一下。
+
+initShader函数的作用是：编译GLSLES代码，创建和初始化着色器供WebGL使用。具体地，分为以下7个步骤：
+
+- 创建着色器对象(gl.createShader())
+- 向着色器对象中填充着色器程序的源代码（gl.shaderSource())
+- 编译着色器（gl.compileShader())
+- 创建程序对象(gl.createProgram())
+- 为程序对象分配着色器(gl.attachShader())
+- 连接程序对象（gl.linkProgram())
+- 使用程序对象(gl.useProgram())
+
+这里出现了两个对象：着色器对象、程序对象
+
+- 着色器对象：着色器对象管理一个顶点着色器或一个片元着色器。每一个着色器都有一个着色器对象
+- 程序对象：程序对象是管理着色器对象的容器。WebGL中，一个程序对象必须包含一个顶点着色器和一个片元着色器
+
+### 创建着色器对象
+
+所有的着色器对象都是以gl.createShader()创建的，这个函数接收一个参数，这个参数是gl.VERTEX_SHADER或gl.FRAGMENT_SHADER，分别表示顶点着色器和片元着色器。
+
+如果不需要这个着色器，可以通过gl.deleteShader()删除这个着色器对象。
+
+### 指定着色器代码
+
+通过gl.shaderSource()指定着色器的源代码，这个函数接收两个参数，第一个参数是着色器对象，第二个参数是着色器的源代码。
+
+### 编译着色器
+
+GLSL
+ES语言和JavaScript不同而更接近C或C++，在使用之前需要编译成二进制的可执行格式，WebGL系统真正使用的是这种可执行格式。使用gl.compileShader()
+函数进行编译。
+
+当对着色器编译之后，如果编译失败，可以通过gl.getShaderParameter()
+函数获取着色器的编译状态，如果编译失败，可以通过gl.getShaderInfoLog()函数获取着色器的编译信息。
+
+```js
+if (!webGL.getShaderParameter(vsShader, webGL.COMPILE_STATUS)) {
+  console.log('vsShader error =====', webGL.getShaderInfoLog(vsShader));
+  return;
+}
+if (!webGL.getShaderParameter(fsShader, webGL.COMPILE_STATUS)) {
+  console.log('fsShader error =====', webGL.getShaderInfoLog(fsShader));
+  return;
+}
+```
+
+### 创建程序对象
+
+调用gl.createProgram()创建程序对象，这个函数返回一个程序对象。类似的，可以通过gl.deleteProgram()
+删除程序对象。一旦程序对象被创建之后，需要向程序附上两个着色器
+
+### 为程序对象分配着色器
+
+WebGL系统要运行起来，必须要有两个着色器：一个顶点着色器和一个片元着色器。可以使用gl.attachShader()函数为程序对象分配这两个着色器。
+
+着色器在附给程序对象前，并不一定要为其指定代码或进行编译（也就是说，把空的着色器附给程序对象也是可以的）。类似地，可以使用gl.detachShader()
+函数来解除分配给程序对象的着色器。
+
+### 连接程序对象
+
+在为程序对象分配了两个着色器对象后，还需要将（顶点着色器和片元）着色器连接起来。使用gl.1inkProgram()函数来进行这一步操作。
+
+程序对象进行着色器连接操作，目的是保证：
+
+- 顶点着色器和片元着色器的varying变量同名同类型，且一一对应
+- 顶点着色器对每个varying变量赋了值
+- 顶点着色器和片元着色器中的同名uniform变量也是同类型的（无需一一对应，即某些uniform变量可以出现在一个着色器中而不出现在另一个中）
+- 着色器中的attribute变量、uniform变量和varying变量的个数没有超过着色器的上限
+
+### 使用程序对象
+
+通过调用gl.useProgram()告知WebGL系统绘制时使用哪个程序对象
