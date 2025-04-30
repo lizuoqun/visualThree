@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单节点绘制</title>
+</head>
+<script type="module">
+  import * as mat4 from '../assets/js/gl-matrix/esm/mat4.js';
+
+  let webGL;
+  const projMat4 = mat4.create();
+  let program;
+
+  let vertexString = `
+    attribute vec4 a_position;
+    uniform mat4 u_formMatrix;
+    attribute vec4 a_Normal;
+    uniform vec3 u_LightDirection;
+    uniform vec3 u_DiffuseLight;
+    uniform vec3 u_AmbientLight;
+    varying vec4 v_Color;
+    void main(void){
+        gl_Position = u_formMatrix * a_position;
+        vec3 normal = normalize(a_Normal.xyz);
+        vec3 LightDirection = normalize(u_LightDirection.xyz);
+        float nDotL = max(dot(LightDirection, normal), 0.0);
+        vec3 diffuse = u_DiffuseLight * vec3(1.0,0,1.0)* nDotL;
+        vec3 ambient = u_AmbientLight * vec3(1.0,0,1.0);
+        v_Color = vec4(diffuse + ambient, 1);
+    }`;
+  let fragmentString = `
+    precision mediump float;
+    varying vec4 v_Color;
+    void main(void){
+      gl_FragColor = v_Color;
+    }`;
+
+  function init() {
+    initWebGL();
+    initShader();
+    clear();
+    initLight();
+    initBuffer();
+    initEvent();
+  }
+
+  let webGLdiv;
+  let angle = 45;
+
+  function initWebGL() {
+    webGLdiv = document.getElementById('webgl');
+    webGL = webGLdiv.getContext('webgl');
+    webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+  }
+
+  function initShader() {
+    // 创建着色器对象（顶点、片元）
+    let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+    let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+    // 绑定着色器源代码
+    webGL.shaderSource(vsShader, vertexString);
+    webGL.shaderSource(fsShader, fragmentString);
+
+    // 编译着色器对象
+    webGL.compileShader(vsShader);
+    webGL.compileShader(fsShader);
+
+    if (!webGL.getShaderParameter(vsShader, webGL.COMPILE_STATUS)) {
+      var err = webGL.getShaderInfoLog(vsShader);
+      console.log('71 =====', err);
+      return;
+    }
+    if (!webGL.getShaderParameter(fsShader, webGL.COMPILE_STATUS)) {
+      var err = webGL.getShaderInfoLog(fsShader);
+      console.log('76 =====', err);
+      return;
+    }
+
+    // 创建程序对象和shader对象进行绑定
+    program = webGL.createProgram();
+    webGL.attachShader(program, vsShader);
+    webGL.attachShader(program, fsShader);
+
+    // webGL和项目中间进行绑定和使用
+    webGL.linkProgram(program);
+    webGL.useProgram(program);
+  }
+
+  function initLight() {
+    let u_DiffuseLight = webGL.getUniformLocation(program, 'u_DiffuseLight');
+    webGL.uniform3f(u_DiffuseLight, 1.0, 1.0, 1.0);
+    let u_LightDirection = webGL.getUniformLocation(program, 'u_PointLightPosition');
+    webGL.uniform3fv(u_LightDirection, [3.0, 3.0, 4.0]);
+    let u_AmbientLight = webGL.getUniformLocation(program, 'u_AmbientLight');
+    webGL.uniform3f(u_AmbientLight, 0.5, 0.5, 1);
+  }
+
+  let indices;
+  let jointAngle = 0;
+  let armAngle = -90.0;
+  const ANGLE_STEP = 3.0;
+
+  function initBuffer() {
+
+    let vertices = new Float32Array([
+      1.5, 10.0, 1.5, -1.5, 10.0, 1.5, -1.5, 0.0, 1.5, 1.5, 0.0, 1.5, // v0-v1-v2-v3 front
+      1.5, 10.0, 1.5, 1.5, 0.0, 1.5, 1.5, 0.0, -1.5, 1.5, 10.0, -1.5, // v0-v3-v4-v5 right
+      1.5, 10.0, 1.5, 1.5, 10.0, -1.5, -1.5, 10.0, -1.5, -1.5, 10.0, 1.5, // v0-v5-v6-v1 up
+      -1.5, 10.0, 1.5, -1.5, 10.0, -1.5, -1.5, 0.0, -1.5, -1.5, 0.0, 1.5, // v1-v6-v7-v2 left
+      -1.5, 0.0, -1.5, 1.5, 0.0, -1.5, 1.5, 0.0, 1.5, -1.5, 0.0, 1.5, // v7-v4-v3-v2 down
+      1.5, 0.0, -1.5, -1.5, 0.0, -1.5, -1.5, 10.0, -1.5, 1.5, 10.0, -1.5  // v4-v7-v6-v5 back
+    ]);
+
+    // Normal
+    let normals = new Float32Array([
+      0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // v0-v1-v2-v3 front
+      1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // v0-v3-v4-v5 right
+      0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, // v0-v5-v6-v1 up
+      -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // v1-v6-v7-v2 left
+      0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, // v7-v4-v3-v2 down
+      0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0  // v4-v7-v6-v5 back
+    ]);
+
+    // Indices of the vertices
+    indices = new Uint8Array([
+      0, 1, 2, 0, 2, 3,    // front
+      4, 5, 6, 4, 6, 7,    // right
+      8, 9, 10, 8, 10, 11,    // up
+      12, 13, 14, 12, 14, 15,    // left
+      16, 17, 18, 16, 18, 19,    // down
+      20, 21, 22, 20, 22, 23     // back
+    ]);
+
+
+    let pointPosition = new Float32Array(vertices);
+    let aPsotion = webGL.getAttribLocation(program, 'a_position');
+    let triangleBuffer = webGL.createBuffer();
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
+    webGL.enableVertexAttribArray(aPsotion);
+    webGL.vertexAttribPointer(aPsotion, 3, webGL.FLOAT, false, 0, 0);
+
+    let aNormal = webGL.getAttribLocation(program, 'a_Normal');
+    let normalsBuffer = webGL.createBuffer();
+    let normalsArr = new Float32Array(normals);
+    webGL.bindBuffer(webGL.ARRAY_BUFFER, normalsBuffer);
+    webGL.bufferData(webGL.ARRAY_BUFFER, normalsArr, webGL.STATIC_DRAW);
+    webGL.enableVertexAttribArray(aNormal);
+    webGL.vertexAttribPointer(aNormal, 3, webGL.FLOAT, false, 0, 0);
+
+    let indexBuffer = webGL.createBuffer();
+    let indices1 = new Uint8Array(indices);
+    webGL.bindBuffer(webGL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    webGL.bufferData(webGL.ELEMENT_ARRAY_BUFFER, indices1, webGL.STATIC_DRAW);
+
+    draw();
+  }
+
+  function initTransformation(angele, rotateArr, ModelMatrix = mat4.create()) {
+    let ProjMatrix = mat4.create();
+    mat4.identity(ProjMatrix);
+    mat4.perspective(ProjMatrix, angle * Math.PI / 180, webGLdiv.clientWidth / webGLdiv.clientHeight, 1, 1000); //修改可视域范围
+
+    let uniformMatrix1 = webGL.getUniformLocation(program, 'u_formMatrix');
+
+    mat4.rotate(ModelMatrix, ModelMatrix, (angele * Math.PI) / 180.0, rotateArr);
+    let ViewMatrix = mat4.create();
+    mat4.identity(ViewMatrix);
+    mat4.lookAt(ViewMatrix, [50, 50, 50], [0, 0, 0], [0, 1, 0]);
+
+    let mvMatrix = mat4.create();
+    mat4.identity(mvMatrix);
+    mat4.multiply(mvMatrix, ViewMatrix, ModelMatrix);
+
+    let mvpMatrix = mat4.create();
+    mat4.identity(mvpMatrix);
+    mat4.multiply(mvpMatrix, ProjMatrix, mvMatrix);
+    webGL.uniformMatrix4fv(uniformMatrix1, false, mvpMatrix);
+    return ModelMatrix;
+  }
+
+  function initEvent() {
+    document.onkeydown = keydown;
+  }
+
+  function keydown(e) {
+    switch (e.keyCode) {
+      case 38:
+        if (jointAngle < 135.0) jointAngle += ANGLE_STEP;
+        break;
+      case 40:
+        if (jointAngle > -135.0) jointAngle -= ANGLE_STEP;
+        break;
+      case 39:
+        armAngle += ANGLE_STEP;
+        break;
+      case 37:
+        armAngle -= ANGLE_STEP;
+        break;
+      default:
+        return;
+    }
+    clear();
+    draw();
+  }
+
+  function clear() {
+    webGL.clearColor(0, 0, 0, 1);
+    webGL.clear(webGL.COLOR_BUFFER_BIT | webGL.DEPTH_BUFFER_BIT);
+    webGL.enable(webGL.DEPTH_TEST);
+  }
+
+  function draw() {
+    let modelArr = initTransformation(jointAngle, [0, 1, 0]);
+    webGL.drawElements(webGL.TRIANGLES, indices.length, webGL.UNSIGNED_BYTE, 0);
+
+    initTransformation(armAngle, [0, 0, 1], modelArr);
+    webGL.drawElements(webGL.TRIANGLES, indices.length, webGL.UNSIGNED_BYTE, 0);
+  }
+
+  init();
+</script>
+<body>
+<canvas id="webgl" width="1024" height="768"></canvas>
+</body>
+
+</html>
