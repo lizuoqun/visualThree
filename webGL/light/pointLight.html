@@ -68,12 +68,12 @@
     webGL.compileShader(fsShader);
 
     if (!webGL.getShaderParameter(vsShader, webGL.COMPILE_STATUS)) {
-      var err = webGL.getShaderInfoLog(vsShader);
+      const err = webGL.getShaderInfoLog(vsShader);
       console.log('71 =====', err);
       return;
     }
     if (!webGL.getShaderParameter(fsShader, webGL.COMPILE_STATUS)) {
-      var err = webGL.getShaderInfoLog(fsShader);
+      const err = webGL.getShaderInfoLog(fsShader);
       console.log('76 =====', err);
       return;
     }

@@ -1,11 +1,3 @@
-<!--
- * @Descripttion: 
- * @version: 
- * @Author: Jsonco
- * @Date: 2022-05-25 19:54:25
- * @LastEditors: sueRimn
- * @LastEditTime: 2022-06-19 14:57:14
--->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -46,9 +38,9 @@
           gl_FragColor = vec4(diffuse + ambient, 1);
         }`;
 
-      var webGL;
-      var angle = 45;
-      var webglDiv;
+      let webGL;
+      let angle = 45;
+      let webglDiv;
 
       function init() {
         initWebgl();
@@ -74,12 +66,12 @@
         webGL.compileShader(vsshader);
         webGL.compileShader(fsshader);
         if (!webGL.getShaderParameter(vsshader, webGL.COMPILE_STATUS)) {
-          var err = webGL.getShaderInfoLog(vsshader);
+          const err = webGL.getShaderInfoLog(vsshader);
           console.log(' =====', err);
           return;
         }
         if (!webGL.getShaderParameter(fsshader, webGL.COMPILE_STATUS)) {
-          var err = webGL.getShaderInfoLog(fsshader);
+          const err = webGL.getShaderInfoLog(fsshader);
           console.log(' =====', err);
           return;
         }
@@ -92,16 +84,16 @@
 
       }
 
-      var positions = [];
-      var indices = [];
+      let positions = [];
+      let indices = [];
 
       function initBuffer() {
 
-        var SPHERE_DIV = 13;
+        const SPHERE_DIV = 13;
 
-        var i, ai, si, ci;
-        var j, aj, sj, cj;
-        var p1, p2;
+        let i, ai, si, ci;
+        let j, aj, sj, cj;
+        let p1, p2;
 
 
         // Generate coordinates

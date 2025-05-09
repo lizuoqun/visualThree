@@ -69,12 +69,12 @@
     webGL.compileShader(fsShader);
 
     if (!webGL.getShaderParameter(vsShader, webGL.COMPILE_STATUS)) {
-      var err = webGL.getShaderInfoLog(vsShader);
+      const err = webGL.getShaderInfoLog(vsShader);
       console.log('71 =====', err);
       return;
     }
     if (!webGL.getShaderParameter(fsShader, webGL.COMPILE_STATUS)) {
-      var err = webGL.getShaderInfoLog(fsShader);
+      const err = webGL.getShaderInfoLog(fsShader);
       console.log('76 =====', err);
       return;
     }
@@ -136,12 +136,12 @@
 
 
     let pointPosition = new Float32Array(vertices);
-    let aPsotion = webGL.getAttribLocation(program, 'a_position');
+    let a_position = webGL.getAttribLocation(program, 'a_position');
     let triangleBuffer = webGL.createBuffer();
     webGL.bindBuffer(webGL.ARRAY_BUFFER, triangleBuffer);
     webGL.bufferData(webGL.ARRAY_BUFFER, pointPosition, webGL.STATIC_DRAW);
-    webGL.enableVertexAttribArray(aPsotion);
-    webGL.vertexAttribPointer(aPsotion, 3, webGL.FLOAT, false, 0, 0);
+    webGL.enableVertexAttribArray(a_position);
+    webGL.vertexAttribPointer(a_position, 3, webGL.FLOAT, false, 0, 0);
 
     let aNormal = webGL.getAttribLocation(program, 'a_Normal');
     let normalsBuffer = webGL.createBuffer();

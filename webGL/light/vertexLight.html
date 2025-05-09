@@ -43,9 +43,9 @@
         }
         `;
 
-      var webGL;
-      var angle = 45;
-      var webglDiv;
+      let webGL;
+      let angle = 45;
+      let webglDiv;
 
       function init() {
         initWebgl();
@@ -58,48 +58,47 @@
         webglDiv = document.getElementById('myCanvas');
         webGL = webglDiv.getContext('webgl');
         webGL.viewport(0, 0, webglDiv.clientWidth, webglDiv.clientHeight);
-
       }
 
       function initShader() {
 
-        let vsshader = webGL.createShader(webGL.VERTEX_SHADER);
-        let fsshader = webGL.createShader(webGL.FRAGMENT_SHADER);
+        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
 
-        webGL.shaderSource(vsshader, vertexString);
-        webGL.shaderSource(fsshader, fragmentString);
+        webGL.shaderSource(vsShader, vertexString);
+        webGL.shaderSource(fsShader, fragmentString);
 
-        webGL.compileShader(vsshader);
-        webGL.compileShader(fsshader);
-        if (!webGL.getShaderParameter(vsshader, webGL.COMPILE_STATUS)) {
-          let err = webGL.getShaderInfoLog(vsshader);
+        webGL.compileShader(vsShader);
+        webGL.compileShader(fsShader);
+        if (!webGL.getShaderParameter(vsShader, webGL.COMPILE_STATUS)) {
+          let err = webGL.getShaderInfoLog(vsShader);
           console.log(' =====', err);
           return;
         }
-        if (!webGL.getShaderParameter(fsshader, webGL.COMPILE_STATUS)) {
-          let err = webGL.getShaderInfoLog(fsshader);
+        if (!webGL.getShaderParameter(fsShader, webGL.COMPILE_STATUS)) {
+          let err = webGL.getShaderInfoLog(fsShader);
           console.log(' =====', err);
           return;
         }
         let program = webGL.createProgram();
-        webGL.attachShader(program, vsshader);
-        webGL.attachShader(program, fsshader);
+        webGL.attachShader(program, vsShader);
+        webGL.attachShader(program, fsShader);
         webGL.linkProgram(program);
         webGL.useProgram(program);
         webGL.program = program;
 
       }
 
-      var positions = [];
-      var indices = [];
+      let positions = [];
+      let indices = [];
 
       function initBuffer() {
 
-        var SPHERE_DIV = 10;
+        const SPHERE_DIV = 10;
 
-        var i, ai, si, ci;
-        var j, aj, sj, cj;
-        var p1, p2;
+        let i, ai, si, ci;
+        let j, aj, sj, cj;
+        let p1, p2;
 
 
         // Generate coordinates

@@ -1,10 +1,13 @@
-> 前言：在学习 threejs 3D 开发的时候以及后续效果制作的时候，最开始还是有些吃力的，并且在其中运用到一些着色器，一步步试坑过来，还是回到最开始的地方来补一下基础，就有了这一个 webGL 的笔记。
+> 前言：在学习 threejs 3D 开发的时候以及后续效果制作的时候，最开始还是有些吃力的，并且在其中运用到一些着色器，一步步试坑过来，还是回到最开始的地方来补一下基础，就有了这一个
+> webGL 的笔记。
 
-> 其中，教程来自于 bilibili【2022 年 WebGL 入门教程（完结）】 https://www.bilibili.com/video/BV1Kb4y1x72q/?p=4&share_source=copy_web&vd_source=41d2dced76db87052ab1d8a28194bd8f
+> 其中，教程来自于 bilibili【2022 年 WebGL
+>
+入门教程（完结）】 https://www.bilibili.com/video/BV1Kb4y1x72q/?p=4&share_source=copy_web&vd_source=41d2dced76db87052ab1d8a28194bd8f
 
 > 仓库地址：
 > github https://github.com/lizuoqun/visualThree/tree/main/webGL
-> 
+>
 > gitee https://gitee.com/modify_lzq/visualThree
 
 # webGL 概述及点绘制
@@ -21,10 +24,9 @@ x，y，z 的区间都是-1 到 1
 
 ```mermaid
 graph LR
-
     subgraph 测试
-        归属测试-->模版测试
-        模版测试-->深度测试
+        归属测试 --> 模版测试
+        模版测试 --> 深度测试
     end
 
     subgraph 片元数据
@@ -32,36 +34,39 @@ graph LR
         纹理缓冲区 --> 片元着色器
     end
 
-顶点缓冲区 -- uniform数据 --> 顶点着色器
-顶点着色器 --> 图元装配
-图元装配 --> 光栅器
-光栅器 --> 片元着色器
-片元着色器--> 归属测试
-深度测试-->深度缓冲区
-深度测试-->融合
-融合-->抖动
-抖动-->颜色缓冲区
+    顶点缓冲区 -- uniform数据 --> 顶点着色器
+    顶点着色器 --> 图元装配
+    图元装配 --> 光栅器
+    光栅器 --> 片元着色器
+    片元着色器 --> 归属测试
+    深度测试 --> 深度缓冲区
+    深度测试 --> 融合
+    融合 --> 抖动
+    抖动 --> 颜色缓冲区
 ```
 
 ### 顶点着色器
 
-顶点着色器是 GPU 渲染管线上一个可以执行着色器语言的功能单元，具体执行的就是顶点着色器程序，WebGL 顶点着色器程序在 Javascript 中以字符串的形式存在，通过编译处理后传递给顶点着色器执行。 顶点着色器主要作用就是执行顶点着色器程序对顶点进行变换计算，比如顶点位置坐标执行进行旋转、平移等矩阵变换，变换后新的顶点坐标然后赋值给内置变量 gl_Position，作为顶点着色器的输出，图元装配和光栅化环节的输入。
+顶点着色器是 GPU 渲染管线上一个可以执行着色器语言的功能单元，具体执行的就是顶点着色器程序，WebGL 顶点着色器程序在
+Javascript 中以字符串的形式存在，通过编译处理后传递给顶点着色器执行。
+顶点着色器主要作用就是执行顶点着色器程序对顶点进行变换计算，比如顶点位置坐标执行进行旋转、平移等矩阵变换，变换后新的顶点坐标然后赋值给内置变量
+gl_Position，作为顶点着色器的输出，图元装配和光栅化环节的输入。
 
 ```mermaid
 graph LR
-uniform数据 --> 顶点着色器
-顶点数据 --> 顶点着色器
-顶点着色器程序 --> 顶点着色器
-顶点着色器 --> varying变量插值数据
-顶点着色器 --> 内置变量
+    uniform数据 --> 顶点着色器
+    顶点数据 --> 顶点着色器
+    顶点着色器程序 --> 顶点着色器
+    顶点着色器 --> varying变量插值数据
+    顶点着色器 --> 内置变量
 ```
 
 varying 变量插值数据
 
 - attribute 存储限定符，必须声明为全局变量，数据将从着色器外部传给该变量。
 - uniform 是用来从 js 向顶点、片元着色器传输一致的数据
-  - 两者的定义是一样的<存储限定符><类型><变量名> uniform vec4 u_color;
-  - 约定：attribute 变量以 a*开头，uniform 变量以 u*开头
+    - 两者的定义是一样的<存储限定符><类型><变量名> uniform vec4 u_color;
+    - 约定：attribute 变量以 a*开头，uniform 变量以 u*开头
 
 内置变量
 
@@ -71,7 +76,9 @@ varying 变量插值数据
 
 ### 图元装配
 
-顶点变换后的操作是图元装配(primitive assembly)，从程序的角度来看，就是绘制函数 drawArrays()或 drawElements()第一个参数绘制模式 mode 控制顶点如何装配为图元， gl.LINES 的定义的是把两个顶点装配成一个线条图元，gl.TRIANGLES 定义的是三个顶点装配为一个三角面图元，gl.POINTS 定义的是一个点域图元。
+顶点变换后的操作是图元装配(primitive assembly)，从程序的角度来看，就是绘制函数 drawArrays()或 drawElements()第一个参数绘制模式
+mode 控制顶点如何装配为图元， gl.LINES 的定义的是把两个顶点装配成一个线条图元，gl.TRIANGLES 定义的是三个顶点装配为一个三角面图元，gl.POINTS
+定义的是一个点域图元。
 
 ### 光栅化
 
@@ -79,33 +86,36 @@ varying 变量插值数据
 
 ### 片元着色器
 
-片元着色器和顶点着色器一样是 GPU 渲染管线上一个可以执行着色器程序的功能单元，顶点着色器处理的是逐顶点处理顶点数据，片元着色器是逐片元处理片元数据。通过给内置变量 gl_FragColor 赋值可以给每一个片元进行着色， 值可以是一个确定的 RGBA 值，可以是一个和片元位置相关的值，也可以是插值后的顶点颜色。除了给片元进行着色之外，通过关键字 discard 还可以实现哪些片元可以被丢弃，被丢弃的片元不会出现在帧缓冲区，自然不会显示在 canvas 画布上。
+片元着色器和顶点着色器一样是 GPU 渲染管线上一个可以执行着色器程序的功能单元，顶点着色器处理的是逐顶点处理顶点数据，片元着色器是逐片元处理片元数据。通过给内置变量
+gl_FragColor 赋值可以给每一个片元进行着色， 值可以是一个确定的 RGBA 值，可以是一个和片元位置相关的值，也可以是插值后的顶点颜色。除了给片元进行着色之外，通过关键字
+discard 还可以实现哪些片元可以被丢弃，被丢弃的片元不会出现在帧缓冲区，自然不会显示在 canvas 画布上。
 
 ```mermaid
 graph LR
-纹理缓冲区 --> 片元着色器
+    纹理缓冲区 --> 片元着色器
 
     subgraph 属性
-	片元着色器 --> 着色
-	片元着色器 --> discard
+        片元着色器 --> 着色
+        片元着色器 --> discard
     end
 
     subgraph 数据来源
-	片元坐标 --> 片元着色器
-	顶点颜色和纹理坐标等插值数据 --> 片元着色器
-	end
+        片元坐标 --> 片元着色器
+        顶点颜色和纹理坐标等插值数据 --> 片元着色器
+    end
 
-片元着色器程序 --> 片元着色器
-片元着色器-->系列测试
-系列测试-->颜色缓冲区
-系列测试-->深度缓冲区
+    片元着色器程序 --> 片元着色器
+    片元着色器 --> 系列测试
+    系列测试 --> 颜色缓冲区
+    系列测试 --> 深度缓冲区
 ```
 
 ## 案例：绘制一个点
 
 以 html 为例，先添加一个目标 canvas 到页面上，并且添加一个 init 方法调用，页面加载完成之后会执行 init 方法
 
-这里还引入了一个 glMatrix.js（用于高性能 WebGL 应用程序的 JavaScript 矩阵和矢量库）[官网在这，这个 JS 可以在这下载](https://glmatrix.net/)。
+这里还引入了一个 glMatrix.js（用于高性能 WebGL 应用程序的 JavaScript
+矩阵和矢量库）[官网在这，这个 JS 可以在这下载](https://glmatrix.net/)。
 
 ```html
 
@@ -115,11 +125,12 @@ graph LR
 </body>
 ```
 
-在 init 方法当中拆分几个方法进行实现，首先是初始化 WebGL。[WebGL 的 API 文档](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext)
+在 init 方法当中拆分几个方法进行实现，首先是初始化
+WebGL。[WebGL 的 API 文档](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext)
 
 - 通过 getContext 来获取 canvas 元素的 WebGL 绘图上下文
 - viewport 方法设置视口，即指定从标准设备到窗口坐标的 x、y 仿射变换
-  - 参数分别 x，y，width，height（左下角坐标以及视口宽高）
+    - 参数分别 x，y，width，height（左下角坐标以及视口宽高）
 - mat4.ortho
 
 ```js
@@ -148,16 +159,17 @@ function initWebGL() {
 }
 ```
 
-初始化 shader 着色器，其中关于着色器的代码可以先略过，然后就是创建 shader 的流程，其中引入的 mat4 的 proj，再一次通过 proj\*a_position 得到的 gl_Position 会被重新应用到 webGL 的坐标系，也就把 webGL 坐标系又变成了传统的 canvas 左上角坐标系
+初始化 shader 着色器，其中关于着色器的代码可以先略过，然后就是创建 shader 的流程，其中引入的 mat4 的 proj，再一次通过
+proj\*a_position 得到的 gl_Position 会被重新应用到 webGL 的坐标系，也就把 webGL 坐标系又变成了传统的 canvas 左上角坐标系
 
 ```mermaid
 graph TB
-createShader-->shaderSource
-shaderSource --> compileShader
-compileShader-->attachShader
-createProgram-->attachShader
-attachShader-->linkProgram
-linkProgram-->useProgram
+    createShader --> shaderSource
+    shaderSource --> compileShader
+    compileShader --> attachShader
+    createProgram --> attachShader
+    attachShader --> linkProgram
+    linkProgram --> useProgram
 ```
 
 ```js
@@ -204,14 +216,14 @@ function initShader() {
 - 创建单个点对象，注明为 Float32Array 类型
 - getAttribLocation 返回了给定 WebGLProgram 对象中某属性的下标指向位置，前面的着色器的 a_position，就是这个属性的下标位置
 - vertexAttrib4fv 是给顶点进行赋值，也就是顶点着色器中的 gl_Position = proj \* a_position
-  - 参数一：是指定了待修改顶点 attribute 变量的存储位置
-  - 参数二：是用于设置顶点 attibute 变量的向量值
-  - 拓展：同族函数 vertexAttrib1fv、vertexAttrib2fv、vertexAttrib3fv（其中数字代表几个参数、f 表示 float）
+    - 参数一：是指定了待修改顶点 attribute 变量的存储位置
+    - 参数二：是用于设置顶点 attibute 变量的向量值
+    - 拓展：同族函数 vertexAttrib1fv、vertexAttrib2fv、vertexAttrib3fv（其中数字代表几个参数、f 表示 float）
 - getUniformLocation 是返回 uniform 变量的指针位置
 - uniformMatrix4fv 为 uniform 变量指定矩阵值
-  - 参数一：是指定待修改 uniform 变量的存储位置
-  - 参数二：指定是否转置矩阵
-  - 参数三：序列值
+    - 参数一：是指定待修改 uniform 变量的存储位置
+    - 参数二：指定是否转置矩阵
+    - 参数三：序列值
 
 ```js
 function initBuffer() {
@@ -230,13 +242,14 @@ function initBuffer() {
 
 - clearColor 方法用于设置清空颜色缓冲时的颜色值，参数为 rgba 值（取值在 0-1 之间）
 - clear 方法使用预设值来清空缓冲（参数可选）
-  - gl.COLOR_BUFFER_BIT 颜色缓冲区
-  - gl.DEPTH_BUFFER_BIT 深度缓冲区
-  - gl.STENCIL_BUFFER_BIT 模板缓冲区
+    - gl.COLOR_BUFFER_BIT 颜色缓冲区
+    - gl.DEPTH_BUFFER_BIT 深度缓冲区
+    - gl.STENCIL_BUFFER_BIT 模板缓冲区
 - drawArrays 方法为渲染数组中的原始数据
-  - mode：[可选值](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/drawArrays#%E5%8F%82%E6%95%B0)
-  - first：指定从哪个点开始绘制
-  - count：指定绘制的点的数量
+  -
+  mode：[可选值](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/drawArrays#%E5%8F%82%E6%95%B0)
+    - first：指定从哪个点开始绘制
+    - count：指定绘制的点的数量
 
 ```js
 function draw() {
@@ -253,34 +266,36 @@ function draw() {
 修改 initBuffer() 方法
 
 - 创建一个全局存坐标的 POINTS 数组变量
-- 添加鼠标点击事件，这里需要进行数据处理，原因在于鼠标点击的是基于左上角的 px 位置，而在 webGL 当中需要转换成-1 到 1 之间的值。（求出 targetX 和 targetY，这里偷个懒，里面的 1024 和 768 是 canvas 的宽高，按道理来说应该获取一下，这里就直接写死了）
+- 添加鼠标点击事件，这里需要进行数据处理，原因在于鼠标点击的是基于左上角的 px 位置，而在 webGL 当中需要转换成-1 到 1
+  之间的值。（求出 targetX 和 targetY，这里偷个懒，里面的 1024 和 768 是 canvas 的宽高，按道理来说应该获取一下，这里就直接写死了）
 - 在前面顶点着色器定义的是 vec4 四维变量，所以将 z 设置为 0 表示在平面，并且 a 的值设置为 1 表示不透明
 - 覆盖单个点的 pointPosition
 - 创建缓冲区：createBuffer()方法是用于储存顶点数据或着色数据的 WebGLBuffer 对象
 - 绑定缓冲区：bindBuffer()方法是把 WebGLBuffer 对象绑定到指定目标上
-  - 参数一：gl.ARRAY_BUFFER: 包含顶点属性的 Buffer，如顶点坐标，纹理坐标数据或顶点颜色数据。
-  - 参数二：buffer 对象
+    - 参数一：gl.ARRAY_BUFFER: 包含顶点属性的 Buffer，如顶点坐标，纹理坐标数据或顶点颜色数据。
+    - 参数二：buffer 对象
 - 更新缓冲数据：bufferData()方法是创建并初始化了 Buffer 对象的数据存储区
-  - 参数一：指定 Buffer 绑定点（目标）
-    - gl.ARRAY_BUFFER: 包含顶点属性的 Buffer，如顶点坐标，纹理坐标数据或顶点颜色数据
-    - gl.ELEMENT_ARRAY_BUFFER: 用于元素索引的 Buffer。
-  - 参数二：设定 Buffer 对象的数据存储区大小
-  - 参数三：指定数据存储区的使用方法
-    - gl.STATIC_DRAW: 缓冲区的内容可能经常使用，而不会经常更改。内容被写入缓冲区，但不被读取
-    - gl.DYNAMIC_DRAW: 缓冲区的内容可能经常被使用，并且经常更改。内容被写入缓冲区，但不被读取
-    - gl.STREAM_DRAW: 缓冲区的内容可能不会经常使用。内容被写入缓冲区，但不被读取
+    - 参数一：指定 Buffer 绑定点（目标）
+        - gl.ARRAY_BUFFER: 包含顶点属性的 Buffer，如顶点坐标，纹理坐标数据或顶点颜色数据
+        - gl.ELEMENT_ARRAY_BUFFER: 用于元素索引的 Buffer。
+    - 参数二：设定 Buffer 对象的数据存储区大小
+    - 参数三：指定数据存储区的使用方法
+        - gl.STATIC_DRAW: 缓冲区的内容可能经常使用，而不会经常更改。内容被写入缓冲区，但不被读取
+        - gl.DYNAMIC_DRAW: 缓冲区的内容可能经常被使用，并且经常更改。内容被写入缓冲区，但不被读取
+        - gl.STREAM_DRAW: 缓冲区的内容可能不会经常使用。内容被写入缓冲区，但不被读取
 - enableVertexAttribArray()方法是在给定的位置，启用顶点 attribute 数组
 - vertexAttribPointer()方法是指定一个顶点 attributes 数组中，顶点 attributes 变量的数据格式和位置
-  - 参数一：指定要修改的顶点属性的索引
-  - 参数二：指定每个顶点属性的组成数量，必须是 1，2，3 或 4
-  - 参数三：指定数组中每个元素的数据类型可能是，可取【gl.BYTE、gl.SHORT、gl.UNSIGNED_BYTE、gl.UNSIGNED_SHORT、gl.FLOAT】
-  - 参数四：当转换为浮点数时是否应该将整数数值归一化到特定的范围
-  - 参数五：以字节为单位指定连续顶点属性开始之间的偏移量
-  - 参数六：指定顶点属性数组中第一部分的字节偏移量
+    - 参数一：指定要修改的顶点属性的索引
+    - 参数二：指定每个顶点属性的组成数量，必须是 1，2，3 或 4
+    - 参数三：指定数组中每个元素的数据类型可能是，可取【gl.BYTE、gl.SHORT、gl.UNSIGNED_BYTE、gl.UNSIGNED_SHORT、gl.FLOAT】
+    - 参数四：当转换为浮点数时是否应该将整数数值归一化到特定的范围
+    - 参数五：以字节为单位指定连续顶点属性开始之间的偏移量
+    - 参数六：指定顶点属性数组中第一部分的字节偏移量
 - 再最后调用 draw 方法进行绘制
 
 ```js
 const POINTS = [];
+
 function initBuffer() {
   // 创建一个x=100,y=100的点
 
@@ -321,7 +336,8 @@ function initBuffer() {
 
 修改 draw()方法，只用修改绘制的目标为 POINTS 并且设置长度
 
-注：因为在 initBuffer 当中重新调整了坐标位置也就是现在的坐标位置是-1 到 1 之间，所以在顶点着色器当中的 gl_Position = a_position 而不是
+注：因为在 initBuffer 当中重新调整了坐标位置也就是现在的坐标位置是-1 到 1 之间，所以在顶点着色器当中的 gl_Position =
+a_position 而不是
 gl_Position = proj \* a_position
 
 ```js
@@ -390,7 +406,9 @@ webGL.drawArrays(webGL.TRIANGLE_STRIP, 0, size);
 
 ## 绘制五角星
 
-绘制五角星也就是将五角星的十个顶点的位置弄出来，如下 fivePointArray 变量，这里是基于 webgl 的坐标系了，那么在前面顶点着色器的地方就需要去掉 `gl_Position = proj * a_position` 而是改为 `gl_Position = a_position`，最后选择绘制 LINE_LOOP 类型的线也就完成了五角星的绘制
+绘制五角星也就是将五角星的十个顶点的位置弄出来，如下 fivePointArray 变量，这里是基于 webgl
+的坐标系了，那么在前面顶点着色器的地方就需要去掉 `gl_Position = proj * a_position` 而是改为 `gl_Position = a_position`
+，最后选择绘制 LINE_LOOP 类型的线也就完成了五角星的绘制
 
 ```js
 let fivePointArray = [
@@ -425,38 +443,38 @@ webGL.drawElements(webGL.LINE_LOOP, 6, webGL.UNSIGNED_SHORT, 0);
 
 - 优点：
 
-  - 简单直接：直接根据顶点缓冲区的数据顺序绘制，无需额外索引数据。
-  - 适合简单几何体：当顶点数据没有重复（如粒子系统或完全独立的三角形）时更高效。
-  - 动态数据友好：如果顶点数据频繁变化（如实时生成几何体），直接操作顶点缓冲区可能更简单。
-  - 内存占用低：无需存储索引数据，节省内存
+    - 简单直接：直接根据顶点缓冲区的数据顺序绘制，无需额外索引数据。
+    - 适合简单几何体：当顶点数据没有重复（如粒子系统或完全独立的三角形）时更高效。
+    - 动态数据友好：如果顶点数据频繁变化（如实时生成几何体），直接操作顶点缓冲区可能更简单。
+    - 内存占用低：无需存储索引数据，节省内存
 
 - 缺点：
-  - 数据冗余：若顶点被多个图元共享（如立方体、复杂网格），会重复存储相同顶点，增加内存和带宽开销。
-  - 性能限制：重复顶点导致 GPU 多次处理相同数据，可能降低渲染效率（尤其是复杂模型）
+    - 数据冗余：若顶点被多个图元共享（如立方体、复杂网格），会重复存储相同顶点，增加内存和带宽开销。
+    - 性能限制：重复顶点导致 GPU 多次处理相同数据，可能降低渲染效率（尤其是复杂模型）
 
 ---
 
 **gl.drawElements(mode, count, type, offset)**
 
 - 优点：
-  - 顶点复用：通过索引数组引用顶点，共享顶点仅存储一次，减少内存占用和 GPU 处理次数。
-  - 适合复杂模型：对共享顶点多的模型（如网格、角色模型）效率更高，尤其适合静态或低频更新的数据。
-  - 带宽优化：传输到 GPU 的数据量更小（索引通常用`Uint16Array`或`Uint32Array`，体积远小于顶点属性）。
+    - 顶点复用：通过索引数组引用顶点，共享顶点仅存储一次，减少内存占用和 GPU 处理次数。
+    - 适合复杂模型：对共享顶点多的模型（如网格、角色模型）效率更高，尤其适合静态或低频更新的数据。
+    - 带宽优化：传输到 GPU 的数据量更小（索引通常用`Uint16Array`或`Uint32Array`，体积远小于顶点属性）。
 - 缺点：
-  - 复杂度增加：需要额外维护索引缓冲区，对动态顶点数据的管理更复杂（需同步更新顶点和索引）。
-  - 额外绑定步骤：必须绑定`ELEMENT_ARRAY_BUFFER`（索引缓冲）。
-  - 索引类型限制：索引类型（`UNSIGNED_SHORT`/`UNSIGNED_INT`）可能限制最大顶点数量。
+    - 复杂度增加：需要额外维护索引缓冲区，对动态顶点数据的管理更复杂（需同步更新顶点和索引）。
+    - 额外绑定步骤：必须绑定`ELEMENT_ARRAY_BUFFER`（索引缓冲）。
+    - 索引类型限制：索引类型（`UNSIGNED_SHORT`/`UNSIGNED_INT`）可能限制最大顶点数量。
 
 ---
 
 **对比总结**
 
-| **场景**               | **推荐方法**   | **理由**                            |
-| ---------------------- | -------------- | ----------------------------------- |
-| 顶点无共享（如粒子）   | `drawArrays`   | 无需索引，避免冗余开销。            |
+| **场景**      | **推荐方法**       | **理由**               |
+|-------------|----------------|----------------------|
+| 顶点无共享（如粒子）  | `drawArrays`   | 无需索引，避免冗余开销。         |
 | 顶点大量共享（如网格） | `drawElements` | 复用顶点显著减少数据量和 GPU 计算。 |
-| 动态顶点数据频繁更新   | `drawArrays`   | 索引同步复杂，直接操作顶点更简单。  |
-| 静态或低频更新数据     | `drawElements` | 索引复用优势明显，长期性能更优。    |
+| 动态顶点数据频繁更新  | `drawArrays`   | 索引同步复杂，直接操作顶点更简单。    |
+| 静态或低频更新数据   | `drawElements` | 索引复用优势明显，长期性能更优。     |
 
 ---
 
@@ -482,24 +500,40 @@ z1 = z + Tz;
 
 ```js
 // 最开始利用三角函数和半径来表示两个点的位置
-x = r cos a
-y = r sin a
+x = r
+cos
+a
+y = r
+sin
+a
 
 
-x1 = r cos(a + b)
-y1 = r sin(a + b)
+x1 = r
+cos(a + b)
+y1 = r
+sin(a + b)
 
 // 三角函数两角和公式
 sin(a + b) = sina * cosb + cosa * sinb
 cos(a + b) = cosa * cosb - sina * sinb
 
 // 那么对x1和y1进行化简就得到
-x1 = r cos(a + b) = r cosa * cosb - r sina * sinb
-y1 = r sin(a + b) = r cosa * sinb + r sina * cosb
+x1 = r
+cos(a + b) = r
+cosa * cosb - r
+sina * sinb
+y1 = r
+sin(a + b) = r
+cosa * sinb + r
+sina * cosb
 
 // 再用x和y进行替换
-x1 = x cosb - y sinb
-y1 = x sinb + y cosb
+x1 = x
+cosb - y
+sinb
+y1 = x
+sinb + y
+cosb
 ```
 
 缩放：
@@ -644,7 +678,10 @@ requestAnimationFrame(initBuffer);
 
 ## 获取 WebGL 上下文
 
-可以获取一个上下文， 也可以说返回一个可以在 canvas 画布上绘图的环境，也可以说返回一个具有各种方法和属性的对象，当 getContext()方法的参数是 2d 时，返回的是一个 2D 绘图环境；当 getContext()方法的参数是 webgl 时， 返回的是一个 3D 绘图环境，也就是返回一个具有系列绘图方法和属性的 CanvasRenderingContext 对象，该对象具有一系列方法和属性，可以和 Javascript 编程语言、GLSL ES 着色器语言相互配合完成一个三维场景的构建。
+可以获取一个上下文， 也可以说返回一个可以在 canvas 画布上绘图的环境，也可以说返回一个具有各种方法和属性的对象，当
+getContext()方法的参数是 2d 时，返回的是一个 2D 绘图环境；当 getContext()方法的参数是 webgl 时， 返回的是一个 3D
+绘图环境，也就是返回一个具有系列绘图方法和属性的 CanvasRenderingContext 对象，该对象具有一系列方法和属性，可以和 Javascript
+编程语言、GLSL ES 着色器语言相互配合完成一个三维场景的构建。
 
 ```js
 const canvas = document.getElementById("canvas");
@@ -656,34 +693,36 @@ const webGL =
 
 最大的作用就是提升了数组的性能，浏览器事先知道数组中的数据类型，故而处理起来更有效率
 
-> js 中 Array 的内部实现是链表，可以动态增大减少元素，但是元素多的话，性能会比较差，类型化数组管理的是连续内存区域，知道了这块内存的起始位置，可以通过起始位置＋ N \* 偏移量（一次加法一次乘法操作）访问到第 N 个位置的元素，而 Array 的话就需要通过链表一个一个的找下去
+> js 中 Array 的内部实现是链表，可以动态增大减少元素，但是元素多的话，性能会比较差，类型化数组管理的是连续内存区域，知道了这块内存的起始位置，可以通过起始位置＋
+> N \* 偏移量（一次加法一次乘法操作）访问到第 N 个位置的元素，而 Array 的话就需要通过链表一个一个的找下去
 
 webGL 使用的各种类型化数组
 
-| 数组类型     | 每个元素所占字节数 | 描述               |
-| ------------ | ------------------ | ------------------ |
-| Int8Array    | 1                  | 8 位有符号整数     |
-| Uint8Array   | 1                  | 8 位无符号整数     |
-| Int16Array   | 2                  | 16 位有符号整数    |
-| Uint16Array  | 2                  | 16 位无符号整数    |
-| Int32Array   | 4                  | 32 位有符号整数    |
-| Uint32Array  | 4                  | 32 位无符号整数    |
-| Float32Array | 4                  | 单精度 32 位浮点数 |
-| Float64Array | 8                  | 双精度 64 位浮点数 |
+| 数组类型         | 每个元素所占字节数 | 描述          |
+|--------------|-----------|-------------|
+| Int8Array    | 1         | 8 位有符号整数    |
+| Uint8Array   | 1         | 8 位无符号整数    |
+| Int16Array   | 2         | 16 位有符号整数   |
+| Uint16Array  | 2         | 16 位无符号整数   |
+| Int32Array   | 4         | 32 位有符号整数   |
+| Uint32Array  | 4         | 32 位无符号整数   |
+| Float32Array | 4         | 单精度 32 位浮点数 |
+| Float64Array | 8         | 双精度 64 位浮点数 |
 
 类型化数组的方法、属性及常量
 
-| 方法、属性及常量   | 描述                                            |
-| ------------------ | ----------------------------------------------- |
-| get(index)         | 获取 index 位置的元素                           |
-| set(index, value)  | 设置第 x 位置的元素值为 value                   |
+| 方法、属性及常量           | 描述                              |
+|--------------------|---------------------------------|
+| get(index)         | 获取 index 位置的元素                  |
+| set(index, value)  | 设置第 x 位置的元素值为 value             |
 | set(array, offset) | 从第 offset 个元素开始将数组 array 的值填充进去 |
-| length             | 获取类型化数组的长度                            |
-| BYTES_PER_ELEMENT  | 数组中每个元素的字节数                          |
+| length             | 获取类型化数组的长度                      |
+| BYTES_PER_ELEMENT  | 数组中每个元素的字节数                     |
 
 类型化数组不支持 pop、push 方法，创建类型化数组只能使用 new
 
-> 数据的用途不同，要求的精度和形式自然不同，比如顶点索引使用整数即可，根据顶点的数量可以选择 Uint8、Uint16、Uint32 中的哪一种整型数据，顶点的位置一般使用浮点数来表示，浮点数可以选择不同的精度表示。
+> 数据的用途不同，要求的精度和形式自然不同，比如顶点索引使用整数即可，根据顶点的数量可以选择 Uint8、Uint16、Uint32
+> 中的哪一种整型数据，顶点的位置一般使用浮点数来表示，浮点数可以选择不同的精度表示。
 
 ## 缓冲区配置
 
@@ -701,7 +740,8 @@ webGL 使用的各种类型化数组
 
 ### createBuffer() & deleteBuffer()
 
-通过 createBuffer 创建得到的 buffer【在 GPU 控制的显存上创建一个缓冲区用来存储顶点或顶面索引数据】，可以通过 deleteBuffer(buffer)进行删除缓冲区
+通过 createBuffer 创建得到的 buffer【在 GPU 控制的显存上创建一个缓冲区用来存储顶点或顶面索引数据】，可以通过 deleteBuffer(
+buffer)进行删除缓冲区
 
 ### bindBuffer(target,buffer)
 
@@ -717,17 +757,22 @@ bufferData()方法的作用是把 CPU 控制的主存中类型数组数据传入
 - target：同 bindBuffer()方法中的 target
 - data：类型数组变量名：表示要传入缓冲区中的数组数据
 - usage：通过不同的值控制传入缓冲区数据的方式、GPU 使用缓冲区调用数据方式
-  - gl.STATIC_DRAW：静态绘制模式
-  - gl.STREAM_DRAW：流绘制模式
-  - gl.DYNAMIC_DRAW：动态绘制模式
+    - gl.STATIC_DRAW：静态绘制模式
+    - gl.STREAM_DRAW：流绘制模式
+    - gl.DYNAMIC_DRAW：动态绘制模式
 
 ### vertexAttribPointer(location,size,type,normalized,stride,offset)
 
-顶点索引缓冲区不需要该方法，该方法的作用是规定 GPU 从顶点缓冲去中读取数据的方式，很多时候为了提高顶点数据的传输读取效率，往往会把顶点位置、顶点颜色、顶点法向量、纹理坐标交叉定义在一个类型数组中， 一次性传入顶点缓冲区中，CPU 和 GPU 不需要多次通信，只要执行一次 databuffer()方法，这时候 GPU 为了使用顶点缓冲去区的不同用途数据，就要按照一定规律读取，所以类型数据中的数据会把同一个顶点的所有用途数据连续放在一起， 不同顶点的数据依次排列。
+顶点索引缓冲区不需要该方法，该方法的作用是规定 GPU
+从顶点缓冲去中读取数据的方式，很多时候为了提高顶点数据的传输读取效率，往往会把顶点位置、顶点颜色、顶点法向量、纹理坐标交叉定义在一个类型数组中，
+一次性传入顶点缓冲区中，CPU 和 GPU 不需要多次通信，只要执行一次 databuffer()方法，这时候 GPU
+为了使用顶点缓冲去区的不同用途数据，就要按照一定规律读取，所以类型数据中的数据会把同一个顶点的所有用途数据连续放在一起，
+不同顶点的数据依次排列。
 
 ### enableVertexAttribArray(location)
 
-顶点缓冲区和 GPU 渲染管线之间存在一个硬件单元可以决定 GPU 是否能读取顶点缓冲区中的顶点数据，开启方法是 enableVertexAttribArray(),能开启自然能够关闭，关闭的方法是 disableVertexAttribArray()， 两个方法的参数都是顶点着色器程序中顶点变量的索引位置
+顶点缓冲区和 GPU 渲染管线之间存在一个硬件单元可以决定 GPU 是否能读取顶点缓冲区中的顶点数据，开启方法是
+enableVertexAttribArray(),能开启自然能够关闭，关闭的方法是 disableVertexAttribArray()， 两个方法的参数都是顶点着色器程序中顶点变量的索引位置
 
 ## 编译着色器
 
@@ -752,22 +797,34 @@ bufferData()方法的作用是把 CPU 控制的主存中类型数组数据传入
 
 ### attachShader(program,shaderObject)
 
-绑定着色器对象到一个程序对象上，每个程序对象就关联了一组顶点着色器程序、片元着色器程序，第一个参数 program 表示目标程序对象，第二个参数 shaderObject 表示你要绑定的着色器对象。
+绑定着色器对象到一个程序对象上，每个程序对象就关联了一组顶点着色器程序、片元着色器程序，第一个参数 program 表示目标程序对象，第二个参数
+shaderObject 表示你要绑定的着色器对象。
 
 ### linkProgram(program)
 
-在执行 useProgram 方法之前，要先连接程序对象 program 的顶点和片元着色器程序,检查着色程序的错误。 通过连接测试后，才能通过 useprogram 方法把着色器程序传递给 GPU，否则报错。
+在执行 useProgram 方法之前，要先连接程序对象 program 的顶点和片元着色器程序,检查着色程序的错误。 通过连接测试后，才能通过
+useprogram 方法把着色器程序传递给 GPU，否则报错。
 
 ### useProgram(program)
 
-定义 useProgram()方法调用程序对象 program，执行 WebGL 绘制函数 drawArrays()的时候，WebGL 系统会把程序对象对应的顶点、片元着色器程序传递 GPU 渲染管线的顶点、片元着色器功能单元。 同一时刻 GPU 只能配置一组顶点、片元着色器程序，也就是说如果你定义了多个程序对象，分别关联了一组顶点、片元着色器程序，不会同时传递给 GPU。 在代码中 useProgram 的特点是当再次调用方法 useProgram，使用新的 program 程序对象作为新的参数，再次执行绘制函数的时候 CPU 会与 GPU 进行通信， 给 GPU 传入新程序对象 program 对应的顶点、片元着色器程序，这时候就实现了 GPU 着色器程序的切换，每次切换都会耗费一定的硬件资源，可以简单的类比 CPU 线程的切换。 一般复杂的场景都会编写多套着色器程序，放在文件中，供 WebGL 程序调用，比如有纹理贴图和没有纹理贴图的时候着色器程序就不同。
+定义 useProgram()方法调用程序对象 program，执行 WebGL 绘制函数 drawArrays()的时候，WebGL 系统会把程序对象对应的顶点、片元着色器程序传递
+GPU 渲染管线的顶点、片元着色器功能单元。 同一时刻 GPU 只能配置一组顶点、片元着色器程序，也就是说如果你定义了多个程序对象，分别关联了一组顶点、片元着色器程序，不会同时传递给
+GPU。 在代码中 useProgram 的特点是当再次调用方法 useProgram，使用新的 program 程序对象作为新的参数，再次执行绘制函数的时候
+CPU 会与 GPU 进行通信， 给 GPU 传入新程序对象 program 对应的顶点、片元着色器程序，这时候就实现了 GPU
+着色器程序的切换，每次切换都会耗费一定的硬件资源，可以简单的类比 CPU 线程的切换。 一般复杂的场景都会编写多套着色器程序，放在文件中，供
+WebGL 程序调用，比如有纹理贴图和没有纹理贴图的时候着色器程序就不同。
 
 ## 删除对象
 
 ### deleteShader(shaderObject)
 
-参数指定着色器对象变量名 shaderObject，定义要删除的着色器对象，如果已经执行 attachShader()方法把着色器对象绑在程序对象 program 上， 系统不会立即执行 deleteShader()定义的删除操作，如果没有程序对象再使用本着色器对象，deleteShader()定义的删除操作就会执行，释放内存。
+参数指定着色器对象变量名 shaderObject，定义要删除的着色器对象，如果已经执行 attachShader()方法把着色器对象绑在程序对象
+program 上， 系统不会立即执行 deleteShader()定义的删除操作，如果没有程序对象再使用本着色器对象，deleteShader()
+定义的删除操作就会执行，释放内存。
 
 ### deleteProgram(program)
 
-deleteProgram()方法的作用是删除程序对象，参数 program 是程序对象变量名，指定要删除的程序对象，如果已经使用方法 useProgram()调用了该程序对象， 该方法在程序中不是立即执行，删除程序对象的原则是该程序对象 program 不再使用，所谓不再使用就是通过方法 useProgram(program)调用新的程序对象，了解 useProgram()用法可以知道， 执行 useProgram()调用新的程序对象，原来的程序对象 program 不再使用。
+deleteProgram()方法的作用是删除程序对象，参数 program 是程序对象变量名，指定要删除的程序对象，如果已经使用方法 useProgram()
+调用了该程序对象， 该方法在程序中不是立即执行，删除程序对象的原则是该程序对象 program 不再使用，所谓不再使用就是通过方法
+useProgram(program)调用新的程序对象，了解 useProgram()用法可以知道， 执行 useProgram()调用新的程序对象，原来的程序对象
+program 不再使用。

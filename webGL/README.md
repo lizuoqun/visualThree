@@ -1,14 +1,20 @@
-> dir D:\mygit\threeJs\visualThree\webGL\plane 在window下执行该命令，可以获取这个文件夹下面所有目录
-
 # 目录说明
 
-| 文件/文件夹  | 描述                           |
-|---------|------------------------------|
-| assets  | 存放项目所需的静态资源文件，如模型、图片、js包源码等。 |
-| light   | 光照效果相关代码案例。                  |
-| matrix  | 矩阵变换、三维世界相关代码案例。             |
-| plane   | 包含与平面相关的代码文件或资源。             |
-| texture | 存放项目所需的纹理文件，如贴图、材质等。         |
+| 文件/文件夹      | 描述                           |
+|-------------|------------------------------|
+| assets      | 存放项目所需的静态资源文件，如模型、图片、js包源码等。 |
+| level-model | 层次模型相关代码案例。                  |
+| light       | 光照效果相关代码案例。                  |
+| matrix      | 矩阵变换、三维世界相关代码案例。             |
+| plane       | 包含与平面相关的代码文件或资源。             |
+| senior      | webGL 高级                     |
+| texture     | 存放项目所需的纹理文件，如贴图、材质等。         |
+
+## level-model 文件夹
+
+| 文件名            | 描述        |
+|----------------|-----------|
+| singlNode.html | 单节点层次模型案例 |
 
 ## light 文件夹
 
@@ -61,3 +67,5 @@
 | drawPointChange.html        | 绘制单个点（改变其属性）         |
 | triangleManyTexture.html    | 三角形多个纹理              |
 | triangleTexture.html        | 三角形纹理                |
+
+> dir D:\mygit\threeJs\visualThree\webGL\plane 在window下执行该命令，可以获取这个文件夹下面所有目录
