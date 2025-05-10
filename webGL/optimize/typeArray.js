@@ -5,6 +5,10 @@ let view = new Uint32Array(buffer);
 // 每个整数占4字节
 console.log('Uint32Array.BYTES_PER_ELEMENT =====', Uint32Array.BYTES_PER_ELEMENT);
 
+console.log('Uint8Array.BYTES_PER_ELEMENT =====', Uint8Array.BYTES_PER_ELEMENT);
+
+console.log('Float32Array.BYTES_PER_ELEMENT =====', Float32Array.BYTES_PER_ELEMENT);
+
 // ArrayBuffer的长度是16，view.length = 16/4 = 4
 console.log('view.length =====', view.length);
 

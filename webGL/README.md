@@ -6,8 +6,8 @@
 | level-model | 层次模型相关代码案例。                  |
 | light       | 光照效果相关代码案例。                  |
 | matrix      | 矩阵变换、三维世界相关代码案例。             |
+| optimize    | webGL 调试与优化                  |
 | plane       | 包含与平面相关的代码文件或资源。             |
-| senior      | webGL 高级                     |
 | texture     | 存放项目所需的纹理文件，如贴图、材质等。         |
 
 ## level-model 文件夹
