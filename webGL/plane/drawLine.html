@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebGL绘制线</title>
     <script src="../assets/js/glMatrix-0.9.6.min.js"></script>
-    <script src="https://greggman.github.io/webgl-lint/webgl-lint.js" crossorigin></script>
+    <script src="https://greggman.github.io/webgl-lint/webgl-lint.js"></script>
 </head>
 <script>
   let webGL;
@@ -17,6 +17,8 @@
   const vertexString = `
         attribute vec4 a_position;
         uniform mat4 proj;
+        uniform vec4 color;
+        attribute vec4 size;
         void main(){
             gl_Position = proj * a_position;
             gl_PointSize = 40.0;
@@ -73,6 +75,7 @@
       200, 300, 0, 1.0,
       300, 200, 0, 1.0
     ];
+    draw(linePositionArray.length / 4);
     let linePosition = new Float32Array(linePositionArray);
     let aPosition = webGL.getAttribLocation(program, 'a_position');
 
