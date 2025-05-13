@@ -322,4 +322,29 @@ gl.uniformMatrix4fv(u_ModelMatrix, false, MVPMatrix);
 
 ### 第一人称视角
 
+第一人称视角的核心是相机始终位于观察者的“眼睛”位置，并朝向观察方向。
+
+**视线方向与水平方向计算**
+
+- lookAtDirction: 从相机位置指向目标点的方向向量（即视线方向）。
+- rightDirection: 水平方向向量，通过视线方向与上方向叉乘得到。
+
+```js
+const lookAtDirction = glMatrix.vec3.subtract(glMatrix.vec3.create(), lookAtPosition, eyePosition);
+glMatrix.vec3.normalize(lookAtDirction, lookAtDirction);
+
+const rightDirection = glMatrix.vec3.cross(glMatrix.vec3.create(), updirction, lookAtDirction);
+glMatrix.vec3.normalize(rightDirection, rightDirection);
+```
+
 ### 第三人称视角
+
+与第一人称视角不同的是，相机始终位于观察对象的后方或侧面，用户可以看到自己控制的角色或物体
+
+| 特性   | 第一人称视角        | 第三人称视角            |
+|------|---------------|-------------------|
+| 相机位置 | 位于“眼睛”位置，跟随移动 | 固定在角色背后或侧面，不随移动变化 |
+| 目标点  | 始终指向视线前方      | 始终指向角色中心          |
+| 移动方式 | 相机位置改变，视角跟随移动 | 角色移动，相机视角固定或绕其旋转  |
+| 交互操作 | 按钮控制前后左右移动    | 按钮控制视角绕角色旋转       |
+| 视觉体验 | 用户感觉自己在场景中行走  | 用户看到角色在场景中活动      |
