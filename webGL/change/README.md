@@ -286,6 +286,40 @@ x 轴正方向移动 1 个单位。此时世界坐标系的原点（0，0，0）
 
 ### 视图变换案例
 
+**通过一个透视投影矩阵**，模拟人眼观察效果（FOV 视野角度）
+
+```js
+glMatrix.mat4.perspective(projMatrix, 30.0, canvas.width / canvas.height, 1.0, 100.0);
+```
+
+**初始化相机矩阵**（视图矩阵）使用 lookAt 函数创建视图矩阵，表示相机的位置、目标点和上方向
+
+参数说明：修改 x, y, z 值会改变相机的目标点，从而调整视角
+
+- [3.0, 3.0, 3.0]: 相机的初始位置（位于 (3, 3, 3) 点）。
+- [x, y, z]: 目标点，即相机看向的方向（由 setTranslate 的参数决定）
+- [0.0, 1.0, 0.0]：上方向向量（Y轴向上）
+
+```js
+const viewMatrix = glMatrix.mat4.create();
+glMatrix.mat4.lookAt(viewMatrix, [3.0, 3.0, 3.0], [x, y, z], [0.0, 1.0, 0.0]);
+```
+
+**创建模型矩阵并计算 MVP 矩阵：**
+
+模型矩阵 (modelMatrix) 表示物体本身的变换（如平移、旋转等）。
+
+- MVP 矩阵是通过将投影矩阵 (projMatrix)、视图矩阵 (viewMatrix) 和模型矩阵 (modelMatrix) 相乘得到的。
+- 最终的 MVP 矩阵传递给着色器中的 u_formMatrix，用于顶点坐标变换。
+
+```js
+let modelMatrix = glMatrix.mat4.create();
+u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_formMatrix');
+MVPMatrix = glMatrix.mat4.create();
+glMatrix.mat4.multiply(MVPMatrix, projMatrix, glMatrix.mat4.multiply(MVPMatrix, viewMatrix, modelMatrix));
+gl.uniformMatrix4fv(u_ModelMatrix, false, MVPMatrix);
+```
+
 ### 第一人称视角
 
 ### 第三人称视角
