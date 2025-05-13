@@ -366,6 +366,16 @@ glMatrix.vec3.normalize(rightDirection, rightDirection);
 #### 透视投影
 
 ![img.png](透视投影公式推导.png)
+
+### 案例
+
+在进行正交投影和透视投影的时候可以直接使用封装好的函数
+
+```js
+glMatrix.mat4.ortho(projMatrix, -1, 1, -1, 1, -1, 100);
+glMatrix.mat4.perspective(projMatrix, 30.0, canvas.width / canvas.height, 1.0, 100.0);
+```
+
 ## DNC变换
 
 ## 视口变换
