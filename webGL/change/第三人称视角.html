@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8"/>
-    <title>视图变换</title>
+    <title>第三视角</title>
     <script src="../assets/js/gl-utils.js"></script>
     <script src="../assets/js/gl-debug.js"></script>
     <script src="../assets/js/ice-utils.js"></script>
@@ -13,11 +13,11 @@
       // 顶点着色器
       const vertexString = `
         attribute vec4 a_Position;
-        uniform mat4 u_formMatrix;
+        uniform mat4 u_MVPMatrix;
         attribute vec2 a_TexCoord;
         varying vec2 v_TexCoord;
         void main(void){
-            gl_Position =  u_formMatrix * a_Position;
+            gl_Position =  u_MVPMatrix * a_Position;
             v_TexCoord = a_TexCoord;
         }`;
       // 片元着色器
@@ -29,15 +29,18 @@
         void main(void){
             gl_FragColor = texture2D(u_Sampler1, v_TexCoord);
         }`;
-
       let gl = null;
       let angle = 0;
       let canvas = null;
+      let MVPMatrix = glMatrix.mat4.create();
+      let projMatrix = glMatrix.mat4.create();
+      let u_MVPMatrix = null;
 
       function main() {
         initWebgl();
         initShaders(gl, vertexString, fragmentString);
         initBuffer();
+        initEvent();
       }
 
       function initWebgl() {
@@ -89,32 +92,80 @@
         // 然后把数据填充的各自的缓冲区中
         initArrayBuffer(gl, coordinates, 3, gl.FLOAT, 'a_Position');
         initArrayBuffer(gl, texCoords, 2, gl.FLOAT, 'a_TexCoord');
-
         // 释放缓冲区中的数据
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         // 将索引数据写入到缓冲区中
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
         //数据写入
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-        setTranslate(gl, 0, 0, 0);
 
+        setTranslate(gl, eyePosition, lookAtPosition, updirction, 0.1);
         initTextures(gl, indices.length, 'u_Sampler1', '../assets/image/box.png');
       }
 
       function initArrayBuffer(gl, data, num, type, attribute) {
-        // 先创建一个缓冲区对象
-        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
         // 把数据写入到缓冲区中
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
         gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
         const a_attribute = gl.getAttribLocation(gl.program, attribute);
         // 将图元分配到图元装配空间中去，并存储起来
         gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
         // 开启图元装配
         gl.enableVertexAttribArray(a_attribute);
+        return true;
       }
 
-      let MVPMatrix = glMatrix.mat4.create();
-      let u_ModelMatrix = null;
+      //相机参数
+      let eyePosition = [0.0, 0.0, 3];
+      let lookAtPosition = [0.0, 0.0, 0.0];
+      let updirction = [0.0, 1.0, 0.0];
+
+      //获取视线向量
+      const lookAtDirction = glMatrix.vec3.subtract(glMatrix.vec3.create(), lookAtPosition, eyePosition);
+      glMatrix.vec3.normalize(lookAtDirction, lookAtDirction);
+      //d等价于 [lookAtPosition[0]-eyePosition[0],lookAtPosition[1]-eyePosition[1],lookAtPosition[2]-eyePosition[2]];
+      const rightDirection = glMatrix.vec3.cross(glMatrix.vec3.create(), updirction, lookAtDirction);
+      //获取水平方向向量
+      glMatrix.vec3.normalize(rightDirection, rightDirection);
+
+      function initEvent() {
+        let forwardangle = angleToRadian(0);
+        forwardBtn.onclick = function (e) {
+          forwardangle += angleToRadian(10);
+          updirction = [1, 0, 0];
+          gl.clearColor(0.0, 0.0, 0.0, 1.0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          setTranslate(gl, eyePosition, lookAtPosition, updirction, forwardangle);
+          gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0);
+        };
+        var backwardangle = angleToRadian(0);
+        backwardBtn.onclick = function (e) {
+          backwardangle += angleToRadian(10);
+          updirction = [1, 0, 0];
+          gl.clearColor(0.0, 0.0, 0.0, 1.0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+
+          setTranslate(gl, eyePosition, lookAtPosition, updirction, backwardangle);
+          gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0);
+        };
+        var leftangle = angleToRadian(0);
+        leftBtn.onclick = function (e) {
+          leftangle += angleToRadian(10);
+          gl.clearColor(0.0, 0.0, 0.0, 1.0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+
+          setTranslate(gl, eyePosition, lookAtPosition, updirction, leftangle);
+          gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0);
+        };
+        var rightangle = angleToRadian(0);
+        rightBtn.onclick = function (e) {
+          rightangle -= angleToRadian(10);
+          gl.clearColor(0.0, 0.0, 0.0, 1.0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          setTranslate(gl, eyePosition, lookAtPosition, updirction, rightangle);
+          gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0);
+        };
+      }
 
       function initTextures(gl, n, u_sample, url) {
         let texture = gl.createTexture();
@@ -126,20 +177,18 @@
         image.src = url;
       }
 
-      function setTranslate(gl, x, y, z) {
-        //视图矩阵
-        const projMatrix = glMatrix.mat4.create();
+
+      function setTranslate(gl, eyePosition, lookAtPosition, updirction, angle) {
         glMatrix.mat4.perspective(projMatrix, 30.0, canvas.width / canvas.height, 1.0, 100.0);
-
+        let viewMatrix = glMatrix.mat4.create();
         // 相机矩阵
-        const viewMatrix = glMatrix.mat4.create();
-        glMatrix.mat4.lookAt(viewMatrix, [3.0, 3.0, 3.0], [x, y, z], [0.0, 1.0, 0.0]);
-
+        glMatrix.mat4.lookAt(viewMatrix, eyePosition, lookAtPosition, updirction);
+        glMatrix.mat4.rotate(viewMatrix, viewMatrix, angle, [0, 1, 0]);
         let modelMatrix = glMatrix.mat4.create();
-        u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_formMatrix');
+        u_MVPMatrix = gl.getUniformLocation(gl.program, 'u_MVPMatrix');
         MVPMatrix = glMatrix.mat4.create();
         glMatrix.mat4.multiply(MVPMatrix, projMatrix, glMatrix.mat4.multiply(MVPMatrix, viewMatrix, modelMatrix));
-        gl.uniformMatrix4fv(u_ModelMatrix, false, MVPMatrix);
+        gl.uniformMatrix4fv(u_MVPMatrix, false, MVPMatrix);
       }
 
       function loadTexture(gl, n, texture, u_Sampler, image) {
@@ -155,11 +204,9 @@
         gl.uniform1i(u_Sampler, 0);
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        for (let index = 0; index < 10; index++) {
-          glMatrix.mat4.translate(MVPMatrix, MVPMatrix, [0, index / 10, 0]);
-          gl.uniformMatrix4fv(u_ModelMatrix, false, MVPMatrix);
-          gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
-        }
+        gl.uniformMatrix4fv(u_MVPMatrix, false, MVPMatrix);
+        gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+
       }
     </script>
 </head>
@@ -167,6 +214,14 @@
 <body onload="main()">
 <canvas id="webgl" width="512" height="512">
 </canvas>
+<input type="button" id="forwardBtn" style="width:80px;position:absolute;top:550px;left:20px;cursor: pointer;"
+       value="向前"/>
+<input type="button" id="backwardBtn" style="width:80px;position:absolute;top:550px;left:150px;cursor: pointer;"
+       value="向后"/>
+<input type="button" id="leftBtn" style="width:80px;position:absolute;top:550px;left:280px;cursor: pointer;"
+       value="向左"/>
+<input type="button" id="rightBtn" style="width:80px;position:absolute;top:550px;left:410px;cursor: pointer;"
+       value="向右"/>
 </body>
 
 </html>
