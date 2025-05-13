@@ -361,11 +361,11 @@ glMatrix.vec3.normalize(rightDirection, rightDirection);
 
 正交投影可以分为两步：第一步为平移，第二步为缩放。将长方体（目标）投影到画布上
 
-![img.png](正交投影公式推导.png)
+![img.png](正交投影-公式推导.png)
 
 #### 透视投影
 
-![img.png](透视投影公式推导.png)
+![img.png](透视投影-公式推导.png)
 
 ### 案例
 
@@ -376,6 +376,13 @@ glMatrix.mat4.ortho(projMatrix, -1, 1, -1, 1, -1, 100);
 glMatrix.mat4.perspective(projMatrix, 30.0, canvas.width / canvas.height, 1.0, 100.0);
 ```
 
-## DNC变换
+## NDC变换
+
+![img.png](NDC变换-公式推导.png)
 
 ## 视口变换
+
+该转换的目的在于将某个在ndc坐标系的点p(x, y, z) ，转换为屏幕坐标系中的点p1（x1, y1, z1) , 更具体的来说 就是将x轴的 [-1,1]
+转换为[X,X + Width]，将y轴的[-1,1]转换为[Y,Y + Height], 将z轴的[-1,1] 转换为[near,far]
+
+![img.png](视口变换-公式推导.png)
