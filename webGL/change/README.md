@@ -270,7 +270,7 @@ x 轴正方向移动 1 个单位。此时世界坐标系的原点（0，0，0）
 可以看这个知乎的文章：[视图变换和投影变换矩阵的原理及推导，以及OpenGL，DirectX和Unity的对应矩阵](https://zhuanlan.zhihu.com/p/362713511)
 
 在相机坐标系当中，分别用d（向前向量 direction）, u（向上向量 up ）, r（向右向量right）和p（位置 position）来表示这四个变量。
-并假设待求的视图矩阵为V（将摄像机移动到原点），并将摄像机的三个向量分别与坐标轴对齐，d与z轴正方向对齐，u与y轴正方向对齐，r与x轴正方向对齐。假设将摄像机与坐标轴对齐的矩阵为V，那么V的推导过程如下。
+并假设待求的视图矩阵为V（将摄像机移动到原点），并将摄像机的三个向量分别与坐标轴对齐，d与z轴正方向对齐，u与y轴正方向对齐，r与x轴正方向对齐。假设将摄像机与坐标轴对齐的矩阵为V，那么V的推导过程如下
 
 其中d、u、r通常这些向量是正交的，且满足右手坐标系的关系
 > r = u × d , u = d × r , d = r × u
@@ -296,7 +296,7 @@ glMatrix.mat4.perspective(projMatrix, 30.0, canvas.width / canvas.height, 1.0, 1
 
 参数说明：修改 x, y, z 值会改变相机的目标点，从而调整视角
 
-- [3.0, 3.0, 3.0]: 相机的初始位置（位于 (3, 3, 3) 点）。
+- [3.0, 3.0, 3.0]: 相机的初始位置（位于 (3, 3, 3) 点）
 - [x, y, z]: 目标点，即相机看向的方向（由 setTranslate 的参数决定）
 - [0.0, 1.0, 0.0]：上方向向量（Y轴向上）
 
@@ -307,10 +307,10 @@ glMatrix.mat4.lookAt(viewMatrix, [3.0, 3.0, 3.0], [x, y, z], [0.0, 1.0, 0.0]);
 
 **创建模型矩阵并计算 MVP 矩阵：**
 
-模型矩阵 (modelMatrix) 表示物体本身的变换（如平移、旋转等）。
+模型矩阵 (modelMatrix) 表示物体本身的变换（如平移、旋转等）
 
-- MVP 矩阵是通过将投影矩阵 (projMatrix)、视图矩阵 (viewMatrix) 和模型矩阵 (modelMatrix) 相乘得到的。
-- 最终的 MVP 矩阵传递给着色器中的 u_formMatrix，用于顶点坐标变换。
+- MVP 矩阵是通过将投影矩阵 (projMatrix)、视图矩阵 (viewMatrix) 和模型矩阵 (modelMatrix) 相乘得到的
+- 最终的 MVP 矩阵传递给着色器中的 u_formMatrix，用于顶点坐标变换
 
 ```js
 let modelMatrix = glMatrix.mat4.create();
@@ -322,12 +322,12 @@ gl.uniformMatrix4fv(u_ModelMatrix, false, MVPMatrix);
 
 ### 第一人称视角
 
-第一人称视角的核心是相机始终位于观察者的“眼睛”位置，并朝向观察方向。
+第一人称视角的核心是相机始终位于观察者的“眼睛”位置，并朝向观察方向
 
 **视线方向与水平方向计算**
 
-- lookAtDirction: 从相机位置指向目标点的方向向量（即视线方向）。
-- rightDirection: 水平方向向量，通过视线方向与上方向叉乘得到。
+- lookAtDirction: 从相机位置指向目标点的方向向量（即视线方向）
+- rightDirection: 水平方向向量，通过视线方向与上方向叉乘得到
 
 ```js
 const lookAtDirction = glMatrix.vec3.subtract(glMatrix.vec3.create(), lookAtPosition, eyePosition);
@@ -348,3 +348,24 @@ glMatrix.vec3.normalize(rightDirection, rightDirection);
 | 移动方式 | 相机位置改变，视角跟随移动 | 角色移动，相机视角固定或绕其旋转  |
 | 交互操作 | 按钮控制前后左右移动    | 按钮控制视角绕角色旋转       |
 | 视觉体验 | 用户感觉自己在场景中行走  | 用户看到角色在场景中活动      |
+
+## 投影变换
+
+在前面已经了解了正交投影和透视投影，[WebGL图形编程实战【3】：矩阵操控 × 从二维到三维的跨越](https://blog.csdn.net/qq_44973159/article/details/146559236)
+
+### 公式推导
+
+#### 正交投影
+
+![img.png](正交投影-示例图.png)
+
+正交投影可以分为两步：第一步为平移，第二步为缩放。将长方体（目标）投影到画布上
+
+![img.png](正交投影公式推导.png)
+
+#### 透视投影
+
+![img.png](透视投影公式推导.png)
+## DNC变换
+
+## 视口变换
