@@ -376,6 +376,8 @@ glMatrix.mat4.ortho(projMatrix, -1, 1, -1, 1, -1, 100);
 glMatrix.mat4.perspective(projMatrix, 30.0, canvas.width / canvas.height, 1.0, 100.0);
 ```
 
+还是以正方体展示为例：
+
 ## NDC变换
 
 ![img.png](NDC变换-公式推导.png)

@@ -21,3 +21,7 @@
 - 颜色分为红绿蓝透明度四个值，组合为四维向量(r,g,b,a)
 - 每个分量的范围是0->1的浮点数，即颜色值/255
 - 可以每个分量进行加减乘除计算，也可对整个颜色向量进行运算
+
+## 开发环境配置
+
+在vscode当中安装插件【Shader languages support for VS Code、GLSL Lint】，其中GLSL Lint插件安装完成之后，在github上下载[ 执行独立包装器 ](https://github.com/KhronosGroup/glslang/releases/tag/main-tot)在插件设置当中配置指定Glslang Validator Path的路径值
