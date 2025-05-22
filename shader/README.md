@@ -51,3 +51,106 @@ void main(){
 ```glsl
 gl_FragColor = vec4(0.1, 0.4, 0.5, 1.0) * vec4(1, 1, 0.5, 1.0);
 ```
+
+### 三原色混合案例
+
+首先通过 u_resolution 统一变量获取窗口分辨率，并对当前片段坐标进行归一化处理，以适配不同屏幕尺寸。根据片段位置，分别判断其是否位于三个圆形区域内，若在则赋予对应颜色（蓝色、红色、绿色）。最终将三种颜色叠加输出。
+
+```glsl
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+// 声明一个uniform变量，用于接收窗口的分辨率
+uniform vec2 u_resolution;
+
+void main(){
+       // 将当前片段坐标归一化并居中，以较短边为基准进行缩放
+       vec2 p = (gl_FragCoord.xy*2.-u_resolution)/min(u_resolution.x, u_resolution.y);
+
+       // 初始化三种颜色
+       vec3 color1 = vec3(0);
+       vec3 color2 = vec3(0);
+       vec3 color3 = vec3(0);
+
+       // 如果当前片段坐标在指定圆心和半径范围内，则设置color1为蓝色
+       if(distance(vec2(0,0.2), vec2(p.xy)) <= 0.4)
+       {
+              color1 = vec3(0,0,1);
+       }
+
+       // 如果当前片段坐标在指定圆心和半径范围内，则设置color2为红色
+       if(distance(vec2(-0.2,-0.2), vec2(p.xy)) <= 0.4)
+       {
+              color2 = vec3(1,0,0);
+       }
+
+       // 如果当前片段坐标在指定圆心和半径范围内，则设置color3为绿色
+       if(distance(vec2(0.2,-0.2), vec2(p.xy)) <= 0.4)
+       {
+              color3 = vec3(0,1,0);
+       }
+
+       // 将三种颜色叠加，得到最终的颜色
+       vec3 color = vec3(0,0,0) + color1 + color2 + color3;
+
+       // 设置片段的最终颜色，alpha值为1
+       gl_FragColor = vec4(color,1);
+}
+```
+
+## 坐标系
+
+用到的变量
+
+| gl_Position                      | gl_FragCoord                                     | gl_PointCoord                                                                                            |
+| -------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| 描述的是顶点在世界坐标系中的坐标 | 描述的是片元在以 Canvas 画布窗口坐标系统中的坐标 | 描述的是点域图元（点精灵/PointSprite）光栅化后的片元，表示的坐标就是 gl_PointSize 定义的区域内的片元坐标 |
+| 根据坐标比例来设定               | 默认是画布的长和宽                               | 区间是[0.1]                                                                                              |
+
+顶点坐标系：gl_Position，在 webGL 当中渲染，将顶点数据置为 000，并且计算片元着色器每个点的颜色值，那么颜色值也就是和点的坐标值是一样的。
+
+```js
+// 顶点着色器
+const vertexString = `
+        attribute vec4 a_Position;
+        void main(){
+            gl_Position = a_Position;
+            gl_PointSize = 512.0;
+        }`;
+
+// 片元着色器
+const fragmentString = `
+        precision mediump float;
+        uniform vec2  resolution;
+        void main(){
+            vec2 p = gl_FragCoord.xy / resolution;
+            gl_FragColor = vec4(p.xy, 0.0, 1.0);
+        }`;
+
+function initBuffer() {
+  let data = new Float32Array([0, 0, 0]);
+
+  let vertexTexCoordBuffer = webGL.createBuffer();
+  webGL.bindBuffer(webGL.ARRAY_BUFFER, vertexTexCoordBuffer);
+  webGL.bufferData(webGL.ARRAY_BUFFER, data, webGL.STATIC_DRAW);
+  let aPosition = webGL.getAttribLocation(program, "a_Position");
+  let modelMatrix = mat4.create();
+
+  let resolution = webGL.getUniformLocation(program, "resolution");
+  webGL.uniform2fv(resolution, [512, 512]);
+
+  webGL.vertexAttribPointer(
+    aPosition,
+    3,
+    webGL.FLOAT,
+    false,
+    data.BYTES_PER_ELEMENT * 3,
+    0
+  );
+  webGL.enableVertexAttribArray(aPosition);
+
+  let uniformProj = webGL.getUniformLocation(program, "proj");
+  webGL.uniformMatrix4fv(uniformProj, false, projMat4);
+}
+```

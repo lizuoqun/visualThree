@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shader 坐标系</title>
+    <script src="../../webGL/assets/js/glMatrix-0.9.6.min.js"></script>
+</head>
+<script>
+    let webGL;
+    const projMat4 = mat4.create();
+    let program;
+
+    // 顶点着色器
+    const vertexString = `
+        attribute vec4 a_Position;
+        void main(){
+            gl_Position = a_Position;
+            gl_PointSize = 512.0;
+        }`;
+
+    // 片元着色器（默认000为原点）
+    const fragmentString1 = `
+        precision mediump float;
+        uniform vec2  resolution;
+        void main(){
+            vec2 p = gl_FragCoord.xy / resolution;
+            gl_FragColor = vec4(p.xy, 0.0, 1.0);
+        }`;
+
+    // 原点移动到中心为止
+    const fragmentString = `
+        precision mediump float;
+        uniform vec2  resolution;
+        void main() {
+            vec2 uv = gl_FragCoord.xy/resolution.xy;
+            uv-=0.5;   
+            gl_FragColor = vec4(uv.xy, 0.0, 1.0);
+        }`
+        
+    const fragmentString3 = `
+        precision mediump float;
+        void main(){
+            gl_FragColor = vec4(gl_PointCoord.xy, 0.0, 1.0);
+        }`;
+
+    function init() {
+        initWebGL();
+        initShader();
+        initBuffer();
+        draw();
+    }
+
+
+    function initWebGL() {
+        let webGLdiv = document.getElementById('webgl');
+        webGL = webGLdiv.getContext('webgl');
+        webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+        mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4);
+    }
+
+    function initShader() {
+        // 创建着色器对象（顶点、片元）
+        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+        // 绑定着色器源代码
+        webGL.shaderSource(vsShader, vertexString);
+        webGL.shaderSource(fsShader, fragmentString);
+
+        // 编译着色器对象
+        webGL.compileShader(vsShader);
+        webGL.compileShader(fsShader);
+
+        // 创建程序对象和shader对象进行绑定
+        program = webGL.createProgram();
+        webGL.attachShader(program, vsShader);
+        webGL.attachShader(program, fsShader);
+
+        // webGL和项目中间进行绑定和使用
+        webGL.linkProgram(program);
+        webGL.useProgram(program);
+    }
+
+    function initBuffer() {
+
+        let data = new Float32Array([
+            0, 0, 0
+        ]);
+
+        let vertexTexCoordBuffer = webGL.createBuffer();
+        webGL.bindBuffer(webGL.ARRAY_BUFFER, vertexTexCoordBuffer);
+        webGL.bufferData(webGL.ARRAY_BUFFER, data, webGL.STATIC_DRAW);
+        let aPosition = webGL.getAttribLocation(program, 'a_Position');
+        let modelMatrix = mat4.create();
+
+        let resolution = webGL.getUniformLocation(program, 'resolution');
+        webGL.uniform2fv(resolution, [512, 512]);
+
+        webGL.vertexAttribPointer(aPosition, 3, webGL.FLOAT, false, data.BYTES_PER_ELEMENT * 3, 0);
+        webGL.enableVertexAttribArray(aPosition);
+
+        let uniformProj = webGL.getUniformLocation(program, 'proj');
+        webGL.uniformMatrix4fv(uniformProj, false, projMat4);
+    }
+
+    function draw() {
+        webGL.clearColor(0, 0, 0, 1);
+        webGL.clear(webGL.COLOR_BUFFER_BIT);
+        webGL.drawArrays(webGL.POINTS, 0, 1);
+    }
+
+</script>
+
+
+<body onload="init()">
+    <canvas id="webgl" width="500" height="500"></canvas>
+</body>
+
+</html>
