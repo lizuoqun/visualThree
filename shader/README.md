@@ -154,3 +154,26 @@ function initBuffer() {
   webGL.uniformMatrix4fv(uniformProj, false, projMat4);
 }
 ```
+
+gl_FragCoord：将原点移动到画布中心点，坐标轴向右为 x 轴，向下为 y 轴，坐标轴原点为画布中心点。这个时候需要-=0.5，让中心点位于画布中心点。
+
+```js
+const fragmentString = `
+       precision mediump float;
+       uniform vec2  resolution;
+       void main() {
+            vec2 uv = gl_FragCoord.xy / resolution.xy;
+            uv-=0.5;   
+            gl_FragColor = vec4(uv.xy, 0.0, 1.0);
+       }`;
+```
+
+gl_PointCoord：根据当前绘制的点精灵（Point Sprite）内部坐标 gl_PointCoord 来输出颜色值，用于可视化点精灵的坐标分布。将 gl_PointCoord.xy 的值作为颜色的红绿通道
+
+```js
+const fragmentString = `
+       precision mediump float;
+       void main(){
+            gl_FragColor = vec4(gl_PointCoord.xy, 0.0, 1.0);
+       }`;
+```
