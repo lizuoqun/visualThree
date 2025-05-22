@@ -99,7 +99,7 @@ void main(){
 }
 ```
 
-## 坐标系
+### 坐标系
 
 用到的变量
 
@@ -155,6 +155,8 @@ function initBuffer() {
 }
 ```
 
+<image src="../assets/顶点坐标000.png">
+
 gl_FragCoord：将原点移动到画布中心点，坐标轴向右为 x 轴，向下为 y 轴，坐标轴原点为画布中心点。这个时候需要-=0.5，让中心点位于画布中心点。
 
 ```js
@@ -177,3 +179,53 @@ const fragmentString = `
             gl_FragColor = vec4(gl_PointCoord.xy, 0.0, 1.0);
        }`;
 ```
+
+### 输出与打印
+
+在 GLSL（OpenGL Shading Language）中，没有像 C/C++ 或 JavaScript 那样的 print 或 console.log 输出机制，因为着色器运行在 GPU 上，不具备直接输出文本的能力。
+
+readPixels 是 WebGL 中用于从帧缓冲区读取像素数据的 API，常用于调试、图像处理或获取渲染结果。
+
+```js
+gl.readPixels(x, y, width, height, format, type, pixels);
+```
+
+参数说明
+|参数| 类型| 描述|
+|--|--|--|
+|x |int| 读取区域左下角在画布上的 X 坐标（像素）|
+|y |int| 读取区域左下角在画布上的 Y 坐标（像素）|
+|width |int |要读取的像素矩形的 宽度（通常为 1 表示单个像素）|
+|height| int| 要读取的像素矩形的 高度（通常为 1 表示单个像素）|
+|format| enum| 像素数据的颜色格式，常用值：gl.RGBA、gl.RGB|
+|type |enum |数据类型，常用值：gl.UNSIGNED_BYTE（0~255）、gl.FLOAT（浮点数）|
+|pixels| TypedArray |用来存储读取结果的数组，如 Uint8Array(4)|
+
+使用：
+
+```js
+let pixel = new Uint8Array(4);
+webGL.readPixels(200, 200, 1, 1, webGL.RGBA, webGL.UNSIGNED_BYTE, pixel);
+console.log(pixel);
+```
+
+## 数据
+
+### 变量
+
+| 变量类型 | 说明                                                 |
+| -------- | ---------------------------------------------------- |
+| bool     | 布尔类型，该类型的变量表示一个布尔值即 true 或 false |
+| int      | 整型，该类的变量表示一个整数                         |
+| float    | 单精度浮点数类型，该类型的变量表示一个单精度的浮点数 |
+
+基本类型的赋值和类型转换
+
+|              | 转换函数                                  | 描述                               |
+| ------------ | ----------------------------------------- | ---------------------------------- |
+| 转换为整型数 | int(float)                                | 去掉浮点数小数部分，转换为整型数   |
+|              | int(bool)                                 | true 转换为 1，false 转换为 0      |
+| 转换为浮点点 | float(int)                                | 将整型数转换为浮点数               |
+|              | float(bool)                               | true 转换为 1.0，false 转换为 0.0  |
+| 转换为布尔值 | bool(int)0 转换为 false，非 0 转换为 true |
+|              | bool(float)                               | 0.0 转换为 false，非 0 转换为 true |

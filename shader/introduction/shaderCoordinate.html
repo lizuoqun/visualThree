@@ -38,7 +38,7 @@
             uv-=0.5;   
             gl_FragColor = vec4(uv.xy, 0.0, 1.0);
         }`
-        
+
     const fragmentString3 = `
         precision mediump float;
         void main(){
@@ -109,6 +109,10 @@
         webGL.clearColor(0, 0, 0, 1);
         webGL.clear(webGL.COLOR_BUFFER_BIT);
         webGL.drawArrays(webGL.POINTS, 0, 1);
+
+        let pixel = new Uint8Array(4);
+        webGL.readPixels(200, 200, 1, 1, webGL.RGBA, webGL.UNSIGNED_BYTE, pixel);
+        console.log(pixel);
     }
 
 </script>
