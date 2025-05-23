@@ -99,6 +99,7 @@ void main(){
 }
 ```
 
+<image src="../assets/三原色混合.png">
 ### 坐标系
 
 用到的变量
