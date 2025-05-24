@@ -171,7 +171,7 @@ const fragmentString = `
        }`;
 ```
 
-gl_PointCoord：根据当前绘制的点精灵（Point Sprite）内部坐标 gl_PointCoord 来输出颜色值，用于可视化点精灵的坐标分布。将 gl_PointCoord.xy 的值作为颜色的红绿通道
+gl_PointCoord：根据当前绘制的点精灵（Point Sprite）内部坐标 gl_PointCoord 来输出颜色值，用于可视化点精灵的坐标分布。将 gl_PointCoord.xy 的值作为颜色的红绿通道。这两个案例只需要修改片元着色器即可，这里就不贴运行图了，观察采用不同的坐标系其渲染的颜色值变换。
 
 ```js
 const fragmentString = `
@@ -274,4 +274,101 @@ float p = v4[2];
 加减法：vec2 v2 += ec2(1.0, 2.0);
 点乘：float f = dot(vec2 v1, vec2 v2);
 叉乘：vec2 v3 = cross(vec2 v1, vec2 v2);
+```
+
+### 矩阵
+
+**存储顺序**
+
+- 矩阵的存储顺序分为 行主序（Row-Major） 和 列主序（Column-Major）：
+- GLSL 默认是列主序：矩阵按列存储在内存中，例如 mat4 是 4 列，每列包含 4 个分量。
+
+**类型**
+
+- mat2：2x2 矩阵
+- mat3：3x3 矩阵
+- mat4：4x4 矩阵
+- mat2x3：2 列 3 行的矩阵（其他类似）
+
+**初始化和取值**
+
+```glsl
+// 列主序初始化：每列单独赋值
+mat4 modelMatrix = mat4(
+    1.0, 0.0, 0.0, 0.0,  // 第一列
+    0.0, 1.0, 0.0, 0.0,  // 第二列
+    0.0, 0.0, 1.0, 0.0,  // 第三列
+    0.0, 0.0, 0.0, 1.0   // 第四列
+);
+
+float m10 = modelMatrix[1][0]; // 第二列，第一行的元素
+```
+
+### GLSL ES 结构体
+
+在 Shader 编程中，结构体（Struct） 是一种组织和管理数据的工具，它可以将多个相关的变量（如顶点坐标、法线、纹理坐标等）打包成一个逻辑单元。结构体的使用可以显著提高代码的可读性和复用性，尤其在复杂的着色器（如顶点着色器、片元着色器或光照计算）中非常常见。
+
+**基本语法**
+
+在定义结构体之前使用 struct 关键字，然后使用大括号 {} 来定义结构体的成员。并且可以定义完成之后添加变量作为 struct 对象
+
+```glsl
+// 定义结构体（通常在着色器顶部声明）
+struct VertexInput {
+    vec3 position;  // 顶点位置（无语义，通过 location 绑定）
+    vec2 uv;        // 纹理坐标
+    vec3 normal;    // 法线方向
+};
+
+struct VertexOutput {
+    vec4 clipPos;   // 裁剪空间位置
+    vec2 uv;        // 传递给片元着色器的 UV
+    vec3 worldNormal; // 世界空间法线
+} vertexOutput1;
+```
+
+**使用**
+
+```glsl
+// 定义过了的就可以直接访问
+vertexOutput1.clipPos = vec4(2.0, 1.0, 1.0, 1.0);
+
+// 和其他语言的区别在于不需要使用new关键字
+VertexInput v1 = VertexInput(vec3(0.0, 0.0, 1.0), vec2(0.0, 0.0), vec3(0.0, 0.0, 1.0));
+
+VertexInput v2 = VertexInput(vec3(1.0, 2.0, 3.0), vec2(0.0, 0.0), vec3(0.0, 0.0, 1.0));
+
+// v1 != v2
+```
+
+### 数组
+
+在 GLSL 当中只支持一维数组
+
+**基本语法&初始化**
+
+```glsl
+// 声明一个固定长度的数组
+float positions[10];       // 10 个 float 元素
+vec3 colors[5];            // 5 个 vec3 元素
+sampler2D textures[4];     // 4 个纹理采样器（需注意硬件限制）
+
+// 静态初始化
+float values[3] = float[3](1.0, 2.0, 3.0);
+vec2 points[2] = vec2[2](vec2(0.0), vec2(1.0));
+
+// 运行时赋值
+for (int i = 0; i < 5; i++) {
+    colors[i] = vec3(float(i) * 0.2);
+}
+```
+
+数组本身只支持`[]`运算符，但数组元素能够参与其自身类型支持的任意运算，
+
+```glsl
+// 将float f 赋值为 Array的第2个元素乘以3.14
+float f = Array[1] * 3.14;
+
+// 将vec4 v4 赋值为 Array的第1个元素乘以vec4
+vec4 v4 = vec4Array[0] * vec4(1.0, 2.0, 3.0, 4.0);
 ```
