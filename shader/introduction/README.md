@@ -54,7 +54,7 @@ gl_FragColor = vec4(0.1, 0.4, 0.5, 1.0) * vec4(1, 1, 0.5, 1.0);
 
 ### 三原色混合案例
 
-首先通过 u_resolution 统一变量获取窗口分辨率，并对当前片段坐标进行归一化处理，以适配不同屏幕尺寸。根据片段位置，分别判断其是否位于三个圆形区域内，若在则赋予对应颜色（蓝色、红色、绿色）。最终将三种颜色叠加输出。
+首先通过 u_resolution 统一变量获取窗口分辨率，并对当前片元坐标进行归一化处理，以适配不同屏幕尺寸。根据片元位置，分别判断其是否位于三个圆形区域内，若在则赋予对应颜色（蓝色、红色、绿色）。最终将三种颜色叠加输出。
 
 ```glsl
 #ifdef GL_ES
@@ -65,7 +65,7 @@ precision mediump float;
 uniform vec2 u_resolution;
 
 void main(){
-       // 将当前片段坐标归一化并居中，以较短边为基准进行缩放
+       // 将当前片元坐标归一化并居中，以较短边为基准进行缩放
        vec2 p = (gl_FragCoord.xy*2.-u_resolution)/min(u_resolution.x, u_resolution.y);
 
        // 初始化三种颜色
@@ -73,19 +73,19 @@ void main(){
        vec3 color2 = vec3(0);
        vec3 color3 = vec3(0);
 
-       // 如果当前片段坐标在指定圆心和半径范围内，则设置color1为蓝色
+       // 如果当前片元坐标在指定圆心和半径范围内，则设置color1为蓝色
        if(distance(vec2(0,0.2), vec2(p.xy)) <= 0.4)
        {
               color1 = vec3(0,0,1);
        }
 
-       // 如果当前片段坐标在指定圆心和半径范围内，则设置color2为红色
+       // 如果当前片元坐标在指定圆心和半径范围内，则设置color2为红色
        if(distance(vec2(-0.2,-0.2), vec2(p.xy)) <= 0.4)
        {
               color2 = vec3(1,0,0);
        }
 
-       // 如果当前片段坐标在指定圆心和半径范围内，则设置color3为绿色
+       // 如果当前片元坐标在指定圆心和半径范围内，则设置color3为绿色
        if(distance(vec2(0.2,-0.2), vec2(p.xy)) <= 0.4)
        {
               color3 = vec3(0,1,0);
@@ -94,7 +94,7 @@ void main(){
        // 将三种颜色叠加，得到最终的颜色
        vec3 color = vec3(0,0,0) + color1 + color2 + color3;
 
-       // 设置片段的最终颜色，alpha值为1
+       // 设置片元的最终颜色，alpha值为1
        gl_FragColor = vec4(color,1);
 }
 ```
@@ -501,11 +501,11 @@ void main() {
 | gl_VertexID               | int      | 顶点着色器的输入，当前顶点的索引（仅限 OpenGL ES 3.0+）                             |
 | gl_InstanceID             | int      | 顶点着色器的输入，实例化渲染的实例索引（仅限 OpenGL ES 3.0+）                       |
 | **_片元着色器输入/输出_** |
-| gl_FragCoord              | vec4     | 片段着色器的输入，表示窗口空间的位置（x,y,z 为坐标，w 为 1/gl_FragCoord.w）         |
-| gl_FrontFacing            | bool     | 片段着色器的输入，表示当前片段是否属于正面图元                                      |
-| gl_PointCoord             | vec2     | 片段着色器的输入，表示点精灵内的纹理坐标（范围[0,1]）                               |
-| gl_FragDepth              | float    | 片段着色器的输出（可选），覆盖片段的深度值（默认使用 gl_FragCoord.z）               |
-| gl_FragColor              | vec4     | 片段着色器的输出（旧版），片段的颜色值（在 GLSL ES 3.0+中被废弃，需自定义输出变量） |
+| gl_FragCoord              | vec4     | 片元着色器的输入，表示窗口空间的位置（x,y,z 为坐标，w 为 1/gl_FragCoord.w）         |
+| gl_FrontFacing            | bool     | 片元着色器的输入，表示当前片元是否属于正面图元                                      |
+| gl_PointCoord             | vec2     | 片元着色器的输入，表示点精灵内的纹理坐标（范围[0,1]）                               |
+| gl_FragDepth              | float    | 片元着色器的输出（可选），覆盖片元的深度值（默认使用 gl_FragCoord.z）               |
+| gl_FragColor              | vec4     | 片元着色器的输出（旧版），片元的颜色值（在 GLSL ES 3.0+中被废弃，需自定义输出变量） |
 | **_通用/其他_**           |
 | gl_ClipDistance           | float[]  | 用户定义的裁剪距离数组（需显式启用，部分环境支持）                                  |
 | gl_in[] (几何着色器)      | struct   | 几何着色器的输入，包含前一阶段的输出变量（如 gl_Position）                          |
@@ -516,8 +516,18 @@ void main() {
 | ------------------------------- | -------- | ----------------------------------------------------- |
 | gl_MaxVertexAttribs             | int      | 支持的顶点属性最大数量（通常至少 16）                 |
 | gl_MaxVertexUniformVectors      | int      | 顶点着色器可用的 vec4 类型 uniform 变量最大数量       |
-| gl_MaxFragmentUniformVectors    | int      | 片段着色器可用的 vec4 类型 uniform 变量最大数量       |
+| gl_MaxFragmentUniformVectors    | int      | 片元着色器可用的 vec4 类型 uniform 变量最大数量       |
 | gl_MaxVertexOutputVectors       | int      | 顶点着色器可输出的 vec4 变量最大数量（GLSL ES 3.0+）  |
-| gl_MaxTextureImageUnits         | int      | 片段着色器可同时使用的纹理单元最大数量（通常至少 16） |
+| gl_MaxTextureImageUnits         | int      | 片元着色器可同时使用的纹理单元最大数量（通常至少 16） |
 | gl_MaxCombinedTextureImageUnits | int      | 所有着色阶段共用的纹理单元最大数量                    |
 | gl_MaxDrawBuffers               | int      | 支持的多渲染目标（MRT）数量（通常至少 4）             |
+
+## 版本
+
+三者关系与区别
+
+| 类别      | 应用场景            | 依赖关系                        | 核心差异                       |
+| --------- | ------------------- | ------------------------------- | ------------------------------ |
+| OpenGL ES | 移动/嵌入式原生应用 | 独立 API，直接调用 GPU          | 功能层级分明，版本迭代扩展功能 |
+| WebGL     | 浏览器环境          | 基于 OpenGL ES（JS 绑定）       | 需浏览器支持，安全限制更多     |
+| GLSL ES   | 着色器编程          | 必须与 OpenGL ES/WebGL 版本匹配 | 语法和功能随 API 版本升级      |
