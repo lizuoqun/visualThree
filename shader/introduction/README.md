@@ -531,3 +531,5 @@ void main() {
 | OpenGL ES | 移动/嵌入式原生应用 | 独立 API，直接调用 GPU          | 功能层级分明，版本迭代扩展功能 |
 | WebGL     | 浏览器环境          | 基于 OpenGL ES（JS 绑定）       | 需浏览器支持，安全限制更多     |
 | GLSL ES   | 着色器编程          | 必须与 OpenGL ES/WebGL 版本匹配 | 语法和功能随 API 版本升级      |
+
+> [GLSL ES注册表](https://registry.khronos.org/OpenGL/index_es.php#specs32) ：包含核心 API 和着色语言的规范

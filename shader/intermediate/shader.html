@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<script src="../../webGL/assets/js/glMatrix-0.9.6.min.js"></script>
+<script>
+    const init = () => {
+        initWebGL();
+        initShader();
+        initBuffer();
+        initEvent();
+        draw();
+    }
+    let webGL;
+    let webGLdiv;
+    let program;
+    const projMat4 = mat4.create();
+
+    let vertexString = ''
+    let fragmentString = ''
+
+    const initWebGL = () => {
+        webGLdiv = document.getElementById('webgl');
+        webGL = webGLdiv.getContext('webgl');
+        webGL.viewport(0, 0, webGLdiv.clientWidth, webGLdiv.clientHeight);
+        mat4.ortho(0, webGLdiv.clientWidth, webGLdiv.clientHeight, 0, -1, 1, projMat4);
+    }
+
+
+    const initShader = () => {
+        // 创建着色器对象（顶点、片元）
+        let vsShader = webGL.createShader(webGL.VERTEX_SHADER);
+        let fsShader = webGL.createShader(webGL.FRAGMENT_SHADER);
+
+        // 绑定着色器源代码
+        webGL.shaderSource(vsShader, vertexString);
+        webGL.shaderSource(fsShader, fragmentString);
+
+        // 编译着色器对象
+        webGL.compileShader(vsShader);
+        webGL.compileShader(fsShader);
+
+        // 创建程序对象和shader对象进行绑定
+        program = webGL.createProgram();
+        webGL.attachShader(program, vsShader);
+        webGL.attachShader(program, fsShader);
+
+        // webGL和项目中间进行绑定和使用
+        webGL.linkProgram(program);
+        webGL.useProgram(program);
+    }
+
+    var verticesTexCoords = new Float32Array([
+        -1.0, 1.0, 0.0, 0., 1.,
+        1.0, 1.0, 0.0, 1., 1.,
+        -1.0, -1.0, 0.0, 0., 0.,
+        1.0, -1.0, 0.0, 1., 0.
+    ]);
+    var index = [
+        0, 2, 1,
+        1, 2, 3
+    ];
+
+    const initBuffer = () => {
+    }
+
+    const initTexture = (imageSrc) => {
+        let textureHandle = webGL.createTexture();
+        textureHandle.image = new Image();
+        textureHandle.image.src = imageSrc;
+        textureHandle.image.onload = () => {
+            handleLoadedTexture(textureHandle);
+        };
+
+        return textureHandle;
+    }
+
+    function handleLoadedTexture(texture) {
+        webGL.bindTexture(webGL.TEXTURE_2D, texture);
+        webGL.texImage2D(webGL.TEXTURE_2D, 0, webGL.RGBA, webGL.RGBA, webGL.UNSIGNED_BYTE, texture.image);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MAG_FILTER, webGL.NEAREST);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_MIN_FILTER, webGL.NEAREST);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_S, webGL.REPEAT);
+        webGL.texParameteri(webGL.TEXTURE_2D, webGL.TEXTURE_WRAP_T, webGL.REPEAT);
+    }
+
+    // 记录鼠标的位置
+    const initEvent = () => {
+        webGLdiv.addEventListener('mousemove', mouseMove, true);
+    }
+
+    let currentPosition = [];
+    const mouseMove = (e) => {
+        let mx = e.offsetX / 512;
+        let my = e.offsetY / 512;
+        currentPosition = [mx, my];
+    }
+
+    let startTime = new Date().getTime();
+    const draw = () => {
+        webGL.clearColor(0.0, 0.0, 0.0, 1.0);
+        webGL.clear(webGL.COLOR_BUFFER_BIT);
+        let time = (new Date().getTime() - startTime) * 0.001;
+        // let u_Time = webGL.getUniformLocation(program, 'u_time');
+        // let u_Mouse = webGL.getUniformLocation(program, 'u_mouse');
+        // gl.uniform2fv(u_Mouse, currentPosition);
+        // gl.uniform1f(u_Time, time);
+
+
+        webGL.activeTexture(webGL.TEXTURE0);
+        webGL.bindTexture(webGL.TEXTURE_2D, texture0);
+        webGL.uniform1i(uniformTexture, 0);
+
+        webGL.drawElements(webGL.TRIANGLES, index.length, webGL.UNSIGNED_SHORT, 0);
+        webGL.flush();
+    }
+</script>
+
+<body onload="init()">
+    <canvas id="webgl" width="512" height="512"></canvas>
+</body>
+
+</html>
