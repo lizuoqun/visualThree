@@ -21,9 +21,9 @@ void main() {
 
     vec3 pct = vec3(st.x);
 
-     pct.r = smoothstep(0.0,1.0, st.x);
-     pct.g = sin(st.x*PI);
-     pct.b = pow(st.x,0.5);
+    //     pct.r = smoothstep(0.0,1.0, st.x);
+    //     pct.g = sin(st.x*PI);
+    //     pct.b = pow(st.x,0.5);
 
     color = mix(colorA, colorB, pct);
 
