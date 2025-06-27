@@ -19,21 +19,18 @@ void main(){
     vec3 color = vec3(0.0);
     float d = 0.0;
 
-    // Remap the space to -1. to 1.
-    st = st *2.-1.;
+    st = st * 2.0 -1.0;
 
-    // Number of sides of your shape
-    int N = 3;
+    // 绘制八边形
+    int N = 8;
 
-    // Angle and radius from the current pixel
     float a = atan(st.x, st.y)+PI;
-    float r = TWO_PI/float(N);
+    float r = TWO_PI / float(N);
 
-    // Shaping function that modulate the distance
-    d = cos(floor(.5+a/r)*r-a)*length(st);
+    d = cos(floor(0.5 + a/r) * r - a) * length(st);
 
-    color = vec3(1.0-smoothstep(.4, .41, d));
-    // color = vec3(d);
+    color = vec3(1.0 - smoothstep(0.4, 0.41, d));
+    //    color = vec3(step(0.4, d));
 
     gl_FragColor = vec4(color, 1.0);
 }
