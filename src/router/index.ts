@@ -4,6 +4,7 @@ export const routes = [
   {path: '/', name: '首页', component: () => import('@/pages/index.vue')},
   {path: '/demo', name: 'demo', component: () => import('@/pages/demo.vue')},
   {path: '/chinaMap', name: '3D地图', component: () => import('@/pages/map/chinaMap.vue')},
+  {path: '/chinaCityMap', name: '3D市级地图', component: () => import('@/pages/map/chinaCityMap.vue')},
   {path: '/city', name: '3D城市', component: () => import('@/pages/map/city.vue')},
   {path: '/city2', name: '3D城市-2', component: () => import('@/pages/map/city2.vue')},
   {path: '/earth3d', name: '3D地球&扫光', component: () => import('@/pages/map/earth3D.vue')},
